@@ -7,7 +7,7 @@ AI Trading Agent otomatis untuk DEX — terintegrasi dengan DexScreener, Jupiter
 
 ## ⚡ Fitur Utama
 
-- 📊 **Live DexScreener Feed** — data harga, volume, likuiditas real-time tanpa API key
+- 📊 **Live DexScreener Feed** — data harga, volume, dan likuiditas real-time tanpa API key
 - 👻 **Phantom Wallet Integration** — connect & baca balance SOL langsung dari browser
 - ⚡ **Jupiter Swap** — execute swap token terbaik di Solana via Jupiter Aggregator v6
 - 🤖 **Auto-Trade Bot** — scan sinyal otomatis setiap 30 detik dengan filter keamanan
