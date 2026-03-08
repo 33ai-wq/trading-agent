@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>33AI Personal Trader — Auto Trading Bot</title>
+<title>3AI Personal Trader — Auto Trading Bot</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -248,8 +248,8 @@ tbody td{padding:10px 12px;font-size:12px;vertical-align:middle}
         <div class="ch"><div class="ct">Bot Config</div><div style="font-family:var(--fm);font-size:9px;color:var(--t3)" id="cfgMode">CONSERVATIVE</div></div>
         <div class="bot-panel">
 
-          <div class="warn-box">
-            💡 Modal <strong id="modalInfo">0.03 SOL</strong> — config sudah dioptimalkan untuk modal kecil. Jaga minimal <strong>0.001 SOL</strong> untuk gas fee.
+          <div class="warn-box" id="warnBox" style="display:none">
+            💡 Modal <strong id="modalInfo">—</strong> — config dioptimalkan otomatis. Jaga minimal <strong>0.001 SOL</strong> untuk gas fee.
           </div>
 
           <div class="bot-status-box">
@@ -353,7 +353,7 @@ tbody td{padding:10px 12px;font-size:12px;vertical-align:middle}
 
 <script>
 // ═══════════════════════════════════════════
-// CONFIG — Optimized for 0.03 SOL
+// CONFIG
 // ═══════════════════════════════════════════
 const RPC = 'https://api.mainnet-beta.solana.com';
 const SOL_USD = 160;
@@ -447,11 +447,16 @@ async function fetchBalance() {
     if (lamports === null) throw new Error('Semua RPC gagal — cek koneksi internet');
     S.balance = lamports / 1e9;
     const usd = S.balance * SOL_USD;
+    // Update ALL balance display elements
     document.getElementById('wBal').textContent = S.balance.toFixed(4);
     document.getElementById('wUsd').textContent = '≈ $' + usd.toFixed(2);
-    document.getElementById('modalInfo').textContent = S.balance.toFixed(4) + ' SOL';
-    log('Balance: ' + S.balance.toFixed(4) + ' SOL (≈ $' + usd.toFixed(2) + ')', 's');
-    log('Balance check: ' + (S.balance >= 0.001 ? 'OK — ready to trade' : 'TOO LOW'), S.balance >= 0.001 ? 's' : 'w');
+    // Show warn box with real balance
+    const warnBox = document.getElementById('warnBox');
+    const modalInfo = document.getElementById('modalInfo');
+    if (warnBox) warnBox.style.display = 'block';
+    if (modalInfo) modalInfo.textContent = S.balance.toFixed(4) + ' SOL';
+    log('✓ Balance loaded: ' + S.balance.toFixed(4) + ' SOL (≈ $' + usd.toFixed(2) + ')', 's');
+    log('Balance check: ' + (S.balance >= 0.001 ? 'OK — ready to trade ✓' : 'TOO LOW'), S.balance >= 0.001 ? 's' : 'w');
     updateEstimates();
     checkBalanceWarning();
   } catch(e) {
