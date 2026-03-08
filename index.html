@@ -3,63 +3,60 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>3AI Personal Trader — Auto Trading Bot</title>
+<title>3AI Personal Trader</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg:#040508;--bg2:#0c1018;--bg3:#111520;--bg4:#161c2a;
+:root{
+  --bg:#040508;--bg2:#0c1018;--bg3:#111520;
   --b1:rgba(255,255,255,0.06);--b2:rgba(255,255,255,0.12);
-  --gold:#f0c040;--goldd:rgba(240,192,64,0.12);
-  --green:#00ff88;--greend:rgba(0,255,136,0.12);
-  --red:#ff4466;--redd:rgba(255,68,102,0.12);
-  --cyan:#00e5ff;--t1:#e8eaf0;--t2:#6b7280;--t3:#3d4450;
-  --fd:'Syne',sans-serif;--fm:'Space Mono',monospace;--fb:'DM Sans',sans-serif;
+  --gold:#f0c040;--green:#00ff88;--red:#ff4466;--cyan:#00e5ff;
+  --goldd:rgba(240,192,64,0.12);--greend:rgba(0,255,136,0.12);--redd:rgba(255,68,102,0.12);
+  --t1:#e8eaf0;--t2:#6b7280;--t3:#3d4450;
+  --fm:'Space Mono',monospace;--fd:'Syne',sans-serif;--fb:'DM Sans',sans-serif;
 }
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+*{margin:0;padding:0;box-sizing:border-box}
 body{font-family:var(--fb);background:var(--bg);color:var(--t1);min-height:100vh;overflow-x:hidden}
 body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(240,192,64,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(240,192,64,0.02) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:rgba(240,192,64,0.3);border-radius:2px}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 @keyframes spin{to{transform:rotate(360deg)}}
-@keyframes slideIn{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
-@keyframes glow{0%,100%{box-shadow:0 0 8px rgba(0,255,136,0.3)}50%{box-shadow:0 0 24px rgba(0,255,136,0.6)}}
+@keyframes glow{0%,100%{box-shadow:0 0 8px rgba(0,255,136,0.3)}50%{box-shadow:0 0 22px rgba(0,255,136,0.6)}}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
 /* HEADER */
-header{position:sticky;top:0;z-index:50;background:rgba(4,5,8,0.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--b1);padding:0 16px;height:54px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+header{position:sticky;top:0;z-index:50;background:rgba(4,5,8,0.97);backdrop-filter:blur(20px);border-bottom:1px solid var(--b1);padding:0 16px;height:54px;display:flex;align-items:center;justify-content:space-between}
 .logo{display:flex;align-items:center;gap:10px}
-.logo-icon{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--gold),#c8860a);display:flex;align-items:center;justify-content:center;font-family:var(--fm);font-size:12px;font-weight:700;color:#000;box-shadow:0 0 14px rgba(240,192,64,0.3)}
-.logo-text{font-family:var(--fd);font-size:16px;font-weight:800}
+.logo-icon{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--gold),#c8860a);display:flex;align-items:center;justify-content:center;font-family:var(--fm);font-size:12px;font-weight:700;color:#000}
+.logo-text{font-family:var(--fd);font-size:16px;font-weight:800;color:var(--t1)}
 .logo-text span{color:var(--gold)}
 .hdr-right{display:flex;align-items:center;gap:8px}
-.status-pill{display:flex;align-items:center;gap:6px;padding:5px 11px;border-radius:7px;font-family:var(--fm);font-size:10px;border:1px solid var(--b1);background:var(--bg2)}
-.status-pill.idle{color:var(--t2)}
-.status-pill.running{color:var(--green);border-color:rgba(0,255,136,0.3);background:var(--greend);animation:glow 2s infinite}
+#botPill{display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:7px;font-family:var(--fm);font-size:10px;border:1px solid var(--b1);background:var(--bg2);color:var(--t2)}
+#botPill.run{color:var(--green);border-color:rgba(0,255,136,0.3);background:var(--greend);animation:glow 2s infinite}
 .sdot{width:6px;height:6px;border-radius:50%;background:currentColor}
-.status-pill.running .sdot{animation:pulse 1s infinite}
-#connectBtn{font-family:var(--fd);font-size:11px;font-weight:700;padding:7px 14px;border-radius:8px;border:1px solid rgba(240,192,64,0.4);background:var(--goldd);color:var(--gold);cursor:pointer;transition:all .2s}
-#connectBtn:hover{background:rgba(240,192,64,0.2)}
+#botPill.run .sdot{animation:pulse 1s infinite}
+#connectBtn{font-family:var(--fd);font-size:12px;font-weight:700;padding:8px 16px;border-radius:9px;border:1px solid rgba(240,192,64,0.4);background:var(--goldd);color:var(--gold);cursor:pointer;transition:all .2s}
+#connectBtn:hover{background:rgba(240,192,64,0.2);transform:translateY(-1px)}
 #connectBtn.on{background:var(--greend);border-color:rgba(0,255,136,0.4);color:var(--green)}
 
-/* APP */
-.app{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:14px}
+/* LAYOUT */
+.app{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:14px}
 
 /* WALLET BAR */
-.wallet-bar{background:var(--bg2);border:1px solid var(--b1);border-radius:12px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
-.wb-left{display:flex;align-items:center;gap:14px;flex-wrap:wrap;gap:10px}
-.wb-bal{display:flex;align-items:baseline;gap:6px}
-.wb-amt{font-family:var(--fd);font-size:26px;font-weight:800;background:linear-gradient(135deg,var(--gold),#fff8e1);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.wb-unit{font-family:var(--fm);font-size:12px;color:var(--t2)}
-.wb-usd{font-family:var(--fm);font-size:12px;color:var(--t3);padding:3px 8px;background:var(--bg3);border-radius:5px}
-.wb-addr{font-family:var(--fm);font-size:10px;color:var(--t3)}
-.wb-right{display:flex;align-items:center;gap:8px}
-.btn-refresh{font-family:var(--fm);font-size:10px;padding:6px 11px;border-radius:7px;border:1px solid var(--b1);background:var(--bg3);color:var(--t2);cursor:pointer;transition:all .2s}
-.btn-refresh:hover{border-color:var(--b2);color:var(--t1)}
+.wbar{background:var(--bg2);border:1px solid var(--b1);border-radius:12px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;animation:fadein .4s ease}
+.wbar-left{display:flex;align-items:center;gap:14px;flex-wrap:wrap;gap:8px}
+.wbal{display:flex;align-items:baseline;gap:6px}
+.wbal-num{font-family:var(--fd);font-size:28px;font-weight:800;background:linear-gradient(135deg,var(--gold),#fff8e1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;transition:all .3s}
+.wbal-unit{font-family:var(--fm);font-size:12px;color:var(--t2)}
+.wbal-usd{font-family:var(--fm);font-size:12px;color:var(--t3);padding:3px 8px;background:var(--bg3);border-radius:5px}
+.waddr{font-family:var(--fm);font-size:10px;color:var(--t3)}
+.btn-sm{font-family:var(--fm);font-size:10px;padding:6px 12px;border-radius:7px;border:1px solid var(--b1);background:var(--bg3);color:var(--t2);cursor:pointer;transition:all .2s}
+.btn-sm:hover{border-color:var(--b2);color:var(--t1)}
 
 /* STATS */
 .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
-@media(min-width:500px){.stats{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:480px){.stats{grid-template-columns:repeat(3,1fr)}}
 @media(min-width:800px){.stats{grid-template-columns:repeat(6,1fr)}}
-.sc{background:var(--bg2);border:1px solid var(--b1);border-radius:11px;padding:13px 14px;position:relative;overflow:hidden;transition:all .2s}
+.sc{background:var(--bg2);border:1px solid var(--b1);border-radius:11px;padding:13px 14px;position:relative;overflow:hidden;transition:border-color .2s}
 .sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--ac,var(--gold));opacity:.5}
 .sc.g{--ac:var(--green)}.sc.r{--ac:var(--red)}.sc.c{--ac:var(--cyan)}
 .sl{font-family:var(--fm);font-size:9px;color:var(--t2);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px}
@@ -76,45 +73,37 @@ header{position:sticky;top:0;z-index:50;background:rgba(4,5,8,0.96);backdrop-fil
 .ct{font-family:var(--fm);font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--t2)}
 .cb{padding:14px 16px}
 
+/* BOT PANEL */
+.bot-status-box{background:var(--bg3);border:1px solid var(--b1);border-radius:10px;padding:14px;margin-bottom:12px;text-align:center}
+.bsl{font-family:var(--fm);font-size:9px;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.bsv{font-family:var(--fd);font-size:22px;font-weight:800;color:var(--t2);transition:color .3s}
+.bsv.run{color:var(--green)}
+.bss{font-family:var(--fm);font-size:10px;color:var(--t3);margin-top:3px}
+.btn-start{width:100%;padding:14px;border-radius:11px;border:none;background:linear-gradient(135deg,var(--green),#00cc66);color:#000;font-family:var(--fd);font-size:15px;font-weight:800;cursor:pointer;transition:all .2s;margin-bottom:8px}
+.btn-start:hover:not(:disabled){box-shadow:0 4px 20px rgba(0,255,136,.35);transform:translateY(-1px)}
+.btn-start:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn-stop{width:100%;padding:11px;border-radius:10px;border:1px solid var(--b2);background:var(--bg3);color:var(--t2);font-family:var(--fd);font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;margin-bottom:12px}
+.btn-stop:hover{border-color:var(--red);color:var(--red)}
+
 /* CONFIG */
 .cfg-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
 .ci{background:var(--bg3);border:1px solid var(--b1);border-radius:8px;padding:10px}
 .cil{font-family:var(--fm);font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
-.civ{font-family:var(--fd);font-size:15px;font-weight:700;color:var(--t1)}
+.civ{font-family:var(--fd);font-size:15px;font-weight:700}
 input[type=range]{width:100%;height:3px;background:var(--b2);border-radius:2px;outline:none;-webkit-appearance:none;cursor:pointer;margin-top:5px}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--gold);cursor:pointer;box-shadow:0 0 6px rgba(240,192,64,.4)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--gold);cursor:pointer}
 select{width:100%;background:var(--bg3);border:1px solid var(--b1);border-radius:7px;color:var(--t1);padding:7px 9px;font-family:var(--fm);font-size:10px;cursor:pointer;outline:none;margin-top:3px}
 select:focus{border-color:rgba(240,192,64,.4)}
 .div{height:1px;background:var(--b1);margin:10px 0}
-
-/* BOT CONTROL */
-.bot-panel{padding:14px 16px}
-.bot-status-box{background:var(--bg3);border:1px solid var(--b1);border-radius:10px;padding:12px 14px;margin-bottom:12px;text-align:center}
-.bot-status-label{font-family:var(--fm);font-size:10px;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
-.bot-status-val{font-family:var(--fd);font-size:20px;font-weight:800;color:var(--t2)}
-.bot-status-val.run{color:var(--green)}
-.bot-status-sub{font-family:var(--fm);font-size:10px;color:var(--t3);margin-top:3px}
-.btn-start{width:100%;padding:14px;border-radius:11px;border:none;background:linear-gradient(135deg,var(--green),#00cc66);color:#000;font-family:var(--fd);font-size:15px;font-weight:800;cursor:pointer;transition:all .2s;margin-bottom:8px;letter-spacing:.3px}
-.btn-start:hover{box-shadow:0 4px 20px rgba(0,255,136,.35);transform:translateY(-1px)}
-.btn-start:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.btn-stop{width:100%;padding:11px;border-radius:10px;border:1px solid var(--b2);background:var(--bg3);color:var(--t2);font-family:var(--fd);font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;margin-bottom:12px}
-.btn-stop:hover{border-color:var(--red);color:var(--red)}
-.info-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--b1)}
-.info-row:last-child{border-bottom:none}
-.info-label{font-size:11px;color:var(--t2)}
-.info-val{font-family:var(--fm);font-size:11px;color:var(--t1);font-weight:700}
-.info-val.g{color:var(--green)}.info-val.gold{color:var(--gold)}
-
-/* WARNING BOX */
-.warn-box{background:rgba(240,192,64,0.06);border:1px solid rgba(240,192,64,0.2);border-radius:9px;padding:10px 12px;margin-bottom:10px;font-size:11px;color:var(--t2);line-height:1.6}
-.warn-box strong{color:var(--gold)}
-
-/* RIGHT PANEL */
-.right{display:flex;flex-direction:column;gap:14px}
+.irow{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--b1)}
+.irow:last-child{border-bottom:none}
+.ilbl{font-size:11px;color:var(--t2)}
+.ival{font-family:var(--fm);font-size:11px;font-weight:700;color:var(--t1)}
+.ival.g{color:var(--green)}.ival.gold{color:var(--gold)}
 
 /* SCANNER */
-.scan-row{display:flex;gap:8px;flex-wrap:wrap}
-.sw{flex:1;min-width:160px;position:relative}
+.srow{display:flex;gap:8px;flex-wrap:wrap}
+.sw{flex:1;min-width:150px;position:relative}
 .sw::before{content:'⌕';position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:16px;pointer-events:none}
 #searchInput{width:100%;background:var(--bg3);border:1px solid var(--b1);border-radius:10px;color:var(--t1);padding:10px 12px 10px 36px;font-family:var(--fb);font-size:13px;outline:none;transition:all .2s}
 #searchInput:focus{border-color:rgba(240,192,64,.4)}
@@ -124,79 +113,69 @@ select:focus{border-color:rgba(240,192,64,.4)}
 .bs:hover{border-color:rgba(240,192,64,.3);color:var(--gold)}
 
 /* TABLE */
-.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-table{width:100%;border-collapse:collapse;min-width:520px}
-thead th{padding:9px 12px;text-align:left;font-family:var(--fm);font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--b1);white-space:nowrap}
+.tbl{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;min-width:480px}
+thead th{padding:8px 12px;text-align:left;font-family:var(--fm);font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--b1);white-space:nowrap}
 tbody tr{border-bottom:1px solid var(--b1);transition:background .12s;cursor:pointer}
 tbody tr:hover{background:var(--bg3)}
-tbody tr.sel{background:rgba(240,192,64,.05);border-left:2px solid var(--gold)}
 tbody td{padding:10px 12px;font-size:12px;vertical-align:middle}
 .ts{font-family:var(--fd);font-weight:700;font-size:13px}
 .tn{font-size:9px;color:var(--t3);font-family:var(--fm);margin-top:1px}
 .cp{color:var(--green);font-family:var(--fm);font-size:11px}
 .cn{color:var(--red);font-family:var(--fm);font-size:11px}
-.sb{display:inline-flex;align-items:center;padding:2px 7px;border-radius:5px;font-family:var(--fm);font-size:9px;font-weight:700;letter-spacing:.5px}
-.ss1{background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.2)}
-.ss2{background:rgba(240,192,64,.1);color:var(--gold);border:1px solid rgba(240,192,64,.2)}
-.ss3{background:rgba(107,114,128,.1);color:var(--t2);border:1px solid var(--b1)}
-.cw{display:flex;align-items:center;gap:6px}
+.sb{display:inline-flex;padding:2px 7px;border-radius:5px;font-family:var(--fm);font-size:9px;font-weight:700}
+.sb1{background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.2)}
+.sb2{background:rgba(240,192,64,.1);color:var(--gold);border:1px solid rgba(240,192,64,.2)}
+.sb3{background:rgba(107,114,128,.1);color:var(--t2);border:1px solid var(--b1)}
+.cbar{display:flex;align-items:center;gap:6px}
 .cb2{height:3px;background:var(--bg3);border-radius:2px;flex:1;min-width:36px;overflow:hidden}
 .cf{height:100%;border-radius:2px;transition:width .5s}
 .ct2{font-family:var(--fm);font-size:10px;color:var(--t2);white-space:nowrap}
 
 /* BOTTOM */
 .bottom{display:grid;grid-template-columns:1fr;gap:14px}
-@media(min-width:640px){.bottom{grid-template-columns:3fr 2fr}}
+@media(min-width:600px){.bottom{grid-template-columns:3fr 2fr}}
 
 /* TERMINAL */
-.term-hdr{padding:10px 14px;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:6px}
-.d{width:7px;height:7px;border-radius:50%}
-.dr{background:#ff5f57}.dy{background:#ffbd2e}.dg{background:#28c840}
-.term-ttl{font-family:var(--fm);font-size:9px;color:var(--t3);margin-left:4px}
+.thdr{padding:10px 14px;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:6px}
+.dot{width:7px;height:7px;border-radius:50%}
 #termLog{padding:10px 14px;height:180px;overflow-y:auto;font-family:var(--fm);font-size:10.5px;line-height:1.9}
 .ll{display:flex;gap:10px}
 .lt{color:var(--t3);flex-shrink:0;font-size:10px}
 .li{color:var(--cyan)}.ls{color:var(--green)}.lw{color:var(--gold)}.le{color:var(--red)}.lf{color:var(--gold);font-weight:700}
-.lb{color:#a78bfa}
 
-/* TRADE HISTORY */
+/* TRADES */
 .ti{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--b1);transition:background .12s}
 .ti:hover{background:var(--bg3)}
 .til{display:flex;align-items:center;gap:8px}
-.tsd{font-family:var(--fm);font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:.5px}
+.tsd{font-family:var(--fm);font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px}
 .tsd.buy{background:var(--greend);color:var(--green)}
-.tsd.sell{background:var(--redd);color:var(--red)}
 .ttk{font-family:var(--fd);font-weight:700;font-size:13px}
 .ttm{font-family:var(--fm);font-size:9px;color:var(--t3)}
 .tpnl{font-family:var(--fm);font-size:12px;font-weight:700}
 .tpnl.p{color:var(--green)}.tpnl.n{color:var(--red)}
 
-/* EMPTY / LOADING */
+/* CHART */
+.chart-wrap{padding:14px;height:110px}
+
+/* EMPTY/LOADING */
 .empty{padding:32px 16px;text-align:center}
 .ei{font-size:26px;margin-bottom:8px;opacity:.2}
 .et{font-family:var(--fm);font-size:11px;color:var(--t3)}
 .ld{display:flex;align-items:center;justify-content:center;gap:8px;padding:30px;font-family:var(--fm);font-size:11px;color:var(--t3)}
 .sp{width:14px;height:14px;border:2px solid var(--b2);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite}
 
-/* CHART */
-.chart-wrap{padding:14px;position:relative}
-.chart-wrap canvas{width:100%!important;display:block}
-
 /* NOTIF */
 .notifs{position:fixed;bottom:16px;right:16px;z-index:999;display:flex;flex-direction:column;gap:6px;max-width:260px}
-.ni{background:var(--bg3);border:1px solid var(--b2);border-radius:9px;padding:9px 13px;font-size:11px;animation:slideIn .25s ease;display:flex;align-items:center;gap:7px;line-height:1.4}
+.ni{background:var(--bg3);border:1px solid var(--b2);border-radius:9px;padding:9px 13px;font-size:11px;display:flex;align-items:center;gap:7px;animation:fadein .25s ease}
 .ni.s{border-color:rgba(0,255,136,.3)}.ni.w{border-color:rgba(240,192,64,.3)}.ni.e{border-color:rgba(255,68,102,.3)}
 
-/* SIGNAL CARD */
-.signal-card{background:var(--bg3);border:1px solid var(--b1);border-radius:10px;padding:12px 14px;margin-bottom:10px}
-.signal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-.signal-tok{font-family:var(--fd);font-size:16px;font-weight:800}
-.signal-conf{font-family:var(--fm);font-size:11px;color:var(--gold)}
-.signal-bar{height:4px;background:var(--b2);border-radius:2px;overflow:hidden;margin-bottom:6px}
-.signal-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--gold),var(--green));transition:width .5s}
-.signal-meta{font-family:var(--fm);font-size:10px;color:var(--t3)}
-
-@media(max-width:400px){.wb-amt{font-size:22px}.sv{font-size:15px}}
+/* CONNECT PROMPT */
+#connectPrompt{background:linear-gradient(135deg,rgba(240,192,64,0.08),transparent);border:1px solid rgba(240,192,64,0.2);border-radius:12px;padding:20px;text-align:center;margin-bottom:14px}
+#connectPrompt h3{font-family:var(--fd);font-size:18px;font-weight:800;margin-bottom:6px}
+#connectPrompt p{font-size:12px;color:var(--t2);margin-bottom:14px;line-height:1.6}
+.btn-connect-big{font-family:var(--fd);font-size:14px;font-weight:800;padding:12px 28px;border-radius:11px;border:none;background:linear-gradient(135deg,var(--gold),#c8860a);color:#000;cursor:pointer;transition:all .2s}
+.btn-connect-big:hover{box-shadow:0 4px 20px rgba(240,192,64,.35);transform:translateY(-1px)}
 </style>
 </head>
 <body>
@@ -207,64 +186,62 @@ tbody td{padding:10px 12px;font-size:12px;vertical-align:middle}
     <div class="logo-text">Personal <span>Trader</span></div>
   </div>
   <div class="hdr-right">
-    <div class="status-pill idle" id="botPill"><div class="sdot"></div><span id="botPillTxt">IDLE</span></div>
-    <button id="connectBtn" onclick="connectWallet()">⬡ CONNECT</button>
+    <div id="botPill"><div class="sdot"></div><span id="botPillTxt">IDLE</span></div>
+    <button id="connectBtn" onclick="connectWallet()">⬡ CONNECT PHANTOM</button>
   </div>
 </header>
 
 <div class="app">
 
-  <!-- WALLET BAR -->
-  <div class="wallet-bar">
-    <div class="wb-left">
-      <div class="wb-bal">
-        <div class="wb-amt" id="wBal">0.0000</div>
-        <div class="wb-unit">SOL</div>
+  <!-- CONNECT PROMPT (shown when not connected) -->
+  <div id="connectPrompt">
+    <h3>Connect Your Wallet</h3>
+    <p>Connect Phantom wallet untuk mulai auto trading.<br>Pastikan Phantom extension aktif di browser.</p>
+    <button class="btn-connect-big" onclick="connectWallet()">⬡ Connect Phantom</button>
+  </div>
+
+  <!-- WALLET BAR (hidden until connected) -->
+  <div class="wbar" id="wbar" style="display:none">
+    <div class="wbar-left">
+      <div class="wbal">
+        <div class="wbal-num" id="wBalNum">—</div>
+        <div class="wbal-unit">SOL</div>
       </div>
-      <div class="wb-usd" id="wUsd">≈ $0.00</div>
-      <div class="wb-addr" id="wAddr">Not connected</div>
+      <div class="wbal-usd" id="wBalUsd">—</div>
+      <div class="waddr" id="wAddr">—</div>
     </div>
-    <div class="wb-right">
-      <button class="btn-refresh" onclick="fetchBalance()">↻ Refresh</button>
-    </div>
+    <button class="btn-sm" onclick="fetchBalance()">↻ Refresh</button>
   </div>
 
   <!-- STATS -->
   <div class="stats">
-    <div class="sc g"><div class="sl">Today P&L</div><div class="sv" id="sPnlDay">+$0.00</div><div class="ss" id="sPnlDayS">0 trades</div></div>
-    <div class="sc"><div class="sl">Total P&L</div><div class="sv" id="sPnl">+$0.00</div><div class="ss" id="sPnlS">all time</div></div>
+    <div class="sc g"><div class="sl">Today P&L</div><div class="sv" id="sPnlDay">$0.00</div><div class="ss" id="sPnlDayS">0 trades</div></div>
+    <div class="sc"><div class="sl">Total P&L</div><div class="sv" id="sPnl">$0.00</div><div class="ss">all time</div></div>
     <div class="sc"><div class="sl">Win Rate</div><div class="sv" id="sWR">—</div><div class="ss">last trades</div></div>
-    <div class="sc"><div class="sl">Trades Today</div><div class="sv" id="sTrades">0</div><div class="ss" id="sTradesS">0 wins / 0 loss</div></div>
-    <div class="sc c"><div class="sl">Best Trade</div><div class="sv" id="sBest">—</div><div class="ss" id="sBestS">—</div></div>
-    <div class="sc r"><div class="sl">Worst Trade</div><div class="sv" id="sWorst">—</div><div class="ss" id="sWorstS">—</div></div>
+    <div class="sc"><div class="sl">Trades Today</div><div class="sv" id="sTrades">0</div><div class="ss" id="sTradesS">0 win / 0 loss</div></div>
+    <div class="sc c"><div class="sl">Best Trade</div><div class="sv" id="sBest">—</div><div class="ss">—</div></div>
+    <div class="sc r"><div class="sl">Worst Trade</div><div class="sv" id="sWorst">—</div><div class="ss">—</div></div>
   </div>
 
-  <!-- MAIN -->
   <div class="main">
 
     <!-- LEFT: BOT CONFIG -->
     <div>
-      <div class="card" style="margin-bottom:14px">
+      <div class="card">
         <div class="ch"><div class="ct">Bot Config</div><div style="font-family:var(--fm);font-size:9px;color:var(--t3)" id="cfgMode">CONSERVATIVE</div></div>
-        <div class="bot-panel">
-
-          <div class="warn-box" id="warnBox" style="display:none">
-            💡 Modal <strong id="modalInfo">—</strong> — config dioptimalkan otomatis. Jaga minimal <strong>0.001 SOL</strong> untuk gas fee.
-          </div>
-
+        <div class="cb">
           <div class="bot-status-box">
-            <div class="bot-status-label">Bot Status</div>
-            <div class="bot-status-val" id="botStatVal">IDLE</div>
-            <div class="bot-status-sub" id="botStatSub">Waiting to start</div>
+            <div class="bsl">Bot Status</div>
+            <div class="bsv" id="bsv">IDLE</div>
+            <div class="bss" id="bss">Connect wallet to start</div>
           </div>
-
-          <button class="btn-start" id="startBtn" onclick="startBot()">▶ START AUTO TRADE</button>
+          <button class="btn-start" id="startBtn" onclick="startBot()" disabled>▶ START AUTO TRADE</button>
           <button class="btn-stop" onclick="stopBot()">■ STOP BOT</button>
 
           <div class="cfg-grid">
-            <div class="ci"><div class="cil">Take Profit</div><div class="civ" id="tpV">3.0%</div><input type="range" min="1" max="10" value="3" step=".5" oninput="uCfg('tp',this.value)"></div>
-            <div class="ci"><div class="cil">Stop Loss</div><div class="civ" id="slV">2.0%</div><input type="range" min="1" max="8" value="2" step=".5" oninput="uCfg('sl',this.value)"></div>
-            <div class="ci"><div class="cil">Trade Size</div><div class="civ" id="szV">5%</div><input type="range" min="3" max="20" value="5" step="1" oninput="uCfg('sz',this.value)"></div>
+            <div class="ci"><div class="cil">Take Profit</div><div class="civ" id="tpV">3%</div><input type="range" min="1" max="10" value="3" step=".5" oninput="uCfg('tp',this.value)"></div>
+            <div class="ci"><div class="cil">Stop Loss</div><div class="civ" id="slV">2%</div><input type="range" min="1" max="8" value="2" step=".5" oninput="uCfg('sl',this.value)"></div>
+            <div class="ci"><div class="cil">Trade Size</div><div class="civ" id="szV">5%</div><input type="range" min="3" max="25" value="5" step="1" oninput="uCfg('sz',this.value)"></div>
             <div class="ci"><div class="cil">Max/Hour</div><div class="civ" id="mxV">2</div><input type="range" min="1" max="6" value="2" step="1" oninput="uCfg('mx',this.value)"></div>
           </div>
 
@@ -272,79 +249,64 @@ tbody td{padding:10px 12px;font-size:12px;vertical-align:middle}
 
           <div class="ci" style="margin-bottom:8px">
             <div class="cil">Strategy</div>
-            <select id="stratSel" onchange="updateMode()">
+            <select id="stratSel">
               <option value="volume">Volume Surge (Recommended)</option>
               <option value="momentum">Momentum</option>
               <option value="dip">Dip Buy</option>
               <option value="breakout">Breakout</option>
             </select>
           </div>
-
           <div class="ci">
             <div class="cil">Scan Interval</div>
             <select id="intervalSel">
               <option value="30000">30 seconds</option>
               <option value="60000" selected>1 minute</option>
               <option value="120000">2 minutes</option>
-              <option value="300000">5 minutes</option>
             </select>
           </div>
 
           <div class="div"></div>
 
-          <div class="signal-card" id="lastSignal" style="display:none">
-            <div class="signal-header">
-              <div class="signal-tok" id="sigTok">—</div>
-              <div class="signal-conf" id="sigConf">0%</div>
-            </div>
-            <div class="signal-bar"><div class="signal-fill" id="sigFill" style="width:0%"></div></div>
-            <div class="signal-meta" id="sigMeta">—</div>
-          </div>
-
-          <div style="display:flex;flex-direction:column;gap:5px">
-            <div class="info-row"><div class="info-label">Min confidence</div><div class="info-val gold">70%</div></div>
-            <div class="info-row"><div class="info-label">Est. per trade</div><div class="info-val" id="estTrade">~0.0015 SOL</div></div>
-            <div class="info-row"><div class="info-label">Est. daily profit</div><div class="info-val g" id="estDaily">~$0.05-0.15</div></div>
-            <div class="info-row"><div class="info-label">Gas reserved</div><div class="info-val">0.001 SOL</div></div>
-          </div>
+          <div class="irow"><div class="ilbl">Balance</div><div class="ival gold" id="infoBalance">—</div></div>
+          <div class="irow"><div class="ilbl">Per trade</div><div class="ival" id="infoPerTrade">—</div></div>
+          <div class="irow"><div class="ilbl">Est. daily</div><div class="ival g" id="infoDaily">—</div></div>
+          <div class="irow"><div class="ilbl">Min confidence</div><div class="ival">70%</div></div>
         </div>
       </div>
     </div>
 
     <!-- RIGHT -->
-    <div class="right">
-
-      <!-- SCANNER -->
+    <div style="display:flex;flex-direction:column;gap:14px">
       <div class="card">
         <div class="ch"><div class="ct">Token Scanner</div><div style="font-family:var(--fm);font-size:9px;color:var(--t3)" id="scanSt">READY</div></div>
         <div class="cb">
-          <div class="scan-row">
-            <div class="sw"><input type="text" id="searchInput" placeholder="Search: SOL, BONK, WIF, JUP..." onkeydown="if(event.key==='Enter')scan()"></div>
+          <div class="srow">
+            <div class="sw"><input type="text" id="searchInput" placeholder="Search: SOL, BONK, WIF..." onkeydown="if(event.key==='Enter')scan()"></div>
             <button class="bp" onclick="scan()">SCAN</button>
             <button class="bs" onclick="clearScan()">CLEAR</button>
           </div>
         </div>
-        <div class="tbl-wrap">
-          <div id="tokenRes"><div class="empty"><div class="ei">◈</div><div class="et">Search token or start bot to auto-scan</div></div></div>
-        </div>
+        <div class="tbl"><div id="tokenRes"><div class="empty"><div class="ei">◈</div><div class="et">Search token or start bot</div></div></div></div>
       </div>
 
-      <!-- BOTTOM -->
       <div class="bottom">
         <div class="card">
-          <div class="term-hdr"><div class="d dr"></div><div class="d dy"></div><div class="d dg"></div><div class="term-ttl">bot.log — 3AI personal trader</div></div>
+          <div class="thdr">
+            <div class="dot" style="background:#ff5f57"></div>
+            <div class="dot" style="background:#ffbd2e"></div>
+            <div class="dot" style="background:#28c840"></div>
+            <div style="font-family:var(--fm);font-size:9px;color:var(--t3);margin-left:4px">bot.log</div>
+          </div>
           <div id="termLog"></div>
         </div>
         <div class="card">
-          <div class="ch"><div class="ct">Trade History</div><div style="font-family:var(--fm);font-size:9px;color:var(--t3)" id="tradeCnt">0 TRADES</div></div>
-          <div id="tradeHist" style="max-height:220px;overflow-y:auto"><div class="empty" style="padding:24px 16px"><div class="ei">📊</div><div class="et">No trades yet</div></div></div>
-          <div class="ch" style="border-top:1px solid var(--b1);border-bottom:none;padding:10px 14px">
-            <div style="font-family:var(--fm);font-size:9px;color:var(--t3)">P&L CHART</div>
+          <div class="ch"><div class="ct">Trades</div><div style="font-family:var(--fm);font-size:9px;color:var(--t3)" id="tradeCnt">0</div></div>
+          <div id="tradeHist" style="max-height:200px;overflow-y:auto">
+            <div class="empty" style="padding:24px"><div class="ei">📊</div><div class="et">No trades yet</div></div>
           </div>
-          <div class="chart-wrap" style="height:110px"><canvas id="pnlChart"></canvas></div>
+          <div class="chart-wrap"><canvas id="pnlChart"></canvas></div>
         </div>
       </div>
-
     </div>
   </div>
 </div>
@@ -352,204 +314,201 @@ tbody td{padding:10px 12px;font-size:12px;vertical-align:middle}
 <div class="notifs" id="notifWrap"></div>
 
 <script>
-// ═══════════════════════════════════════════
-// CONFIG
-// ═══════════════════════════════════════════
-const RPC = 'https://api.mainnet-beta.solana.com';
+// ═══════════════════════════════════════════════════════
+// STATE — no hardcoded wallet, no hardcoded balance
+// ═══════════════════════════════════════════════════════
 const SOL_USD = 160;
-
 const MINTS = {
   SOL:  'So11111111111111111111111111111111111111112',
   USDC: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
-  USDT: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
   BONK: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',
   JUP:  'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN',
   WIF:  'EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm',
-  POPCAT: '7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr'
+  POPCAT:'7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr'
 };
-
-const TARGET_TOKENS = ['BONK','WIF','JUP','POPCAT','SOL'];
+const SCAN_TOKENS = ['BONK','WIF','JUP','SOL','POPCAT'];
+const RPCS = [
+  'https://api.mainnet-beta.solana.com',
+  'https://rpc.ankr.com/solana',
+  'https://solana-mainnet.g.alchemy.com/v2/demo'
+];
 
 const S = {
-  wallet: null, balance: 0,
-  botOn: false, botTimer: null, tradesHr: 0, tradesDay: 0,
+  wallet: null,       // set ONLY from Phantom connect
+  balance: 0,         // set ONLY from RPC fetch
+  botOn: false, botTimer: null,
+  tradesHr: 0, tradesDay: 0,
   trades: [], pnl: 0, pnlDay: 0, pnlHist: [0],
   wins: 0, losses: 0, best: 0, worst: 0,
-  cfg: { tp: 3, sl: 2, sz: 5, mx: 2 },
-  lastScanToken: null
+  cfg: { tp: 3, sl: 2, sz: 5, mx: 2 }
 };
 
-// ═══════════════════════════════════════════
-// WALLET
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+// WALLET — reads from Phantom only, never hardcoded
+// ═══════════════════════════════════════════════════════
 async function connectWallet() {
+  log('Looking for Phantom...', 'i');
+
+  // Wait up to 3s for Phantom to inject
+  let ph = null;
+  for (let i = 0; i < 15; i++) {
+    ph = window.phantom?.solana || window.solana;
+    if (ph?.isPhantom) break;
+    await new Promise(r => setTimeout(r, 200));
+  }
+
+  if (!ph?.isPhantom) {
+    log('Phantom not found. Install from phantom.app', 'e');
+    showN('Phantom tidak terdeteksi! Pastikan extension aktif', 'e');
+    return;
+  }
+
+  log('Phantom found! Requesting connection...', 'i');
   try {
-    // Wait for Phantom to inject (sometimes slow on page load)
-    let ph = null;
-    for (let i = 0; i < 10; i++) {
-      ph = window.phantom?.solana || window.solana;
-      if (ph && ph.isPhantom) break;
-      await new Promise(r => setTimeout(r, 300));
-    }
-    if (!ph || !ph.isPhantom) {
-      showN('Phantom tidak ditemukan! Pastikan extension aktif di Chrome', 'e');
-      log('ERROR: Phantom not detected. Coba: 1) Refresh halaman 2) Klik icon Phantom di toolbar dulu', 'e');
-      window.open('https://phantom.app', '_blank');
-      return;
-    }
-    log('Phantom detected, connecting...', 'i');
-    const res = await ph.connect();
-    S.wallet = res.publicKey.toString();
+    const resp = await ph.connect();
+    const pubkey = resp.publicKey.toString();
+
+    // Store wallet address from Phantom response
+    S.wallet = pubkey;
+
+    // Update UI
     document.getElementById('connectBtn').textContent = '✓ CONNECTED';
     document.getElementById('connectBtn').classList.add('on');
-    document.getElementById('wAddr').textContent = S.wallet.slice(0,8) + '...' + S.wallet.slice(-6);
-    log('Wallet connected: ' + S.wallet, 's');
-    showN('Wallet connected! Fetching balance...', 's');
+    document.getElementById('connectPrompt').style.display = 'none';
+    document.getElementById('wbar').style.display = 'flex';
+    document.getElementById('wAddr').textContent = pubkey.slice(0,8) + '...' + pubkey.slice(-6);
+    document.getElementById('bss').textContent = 'Wallet connected — ready';
+    document.getElementById('startBtn').disabled = false;
+
+    log('Connected: ' + pubkey, 's');
+    showN('Wallet connected!', 's');
+
+    // Fetch real balance from RPC
     await fetchBalance();
-    updateEstimates();
+    updateInfo();
+
   } catch(e) {
-    if (e.message?.includes('rejected') || e.message?.includes('User rejected')) {
-      log('User cancelled connection', 'w');
+    if (e.message?.includes('rejected') || e.code === 4001) {
+      log('User cancelled', 'w');
       showN('Koneksi dibatalkan', 'w');
     } else {
-      log('Connection failed: ' + e.message, 'e');
-      showN('Connect failed: ' + e.message.slice(0,50), 'e');
+      log('Error: ' + e.message, 'e');
+      showN('Error: ' + e.message.slice(0, 50), 'e');
     }
   }
 }
 
 async function fetchBalance() {
-  if (!S.wallet) { log('fetchBalance: no wallet connected', 'w'); return; }
-  try {
-    log('Fetching balance for: ' + S.wallet.slice(0,10) + '...', 'i');
-    const rpcs = [
-      'https://api.mainnet-beta.solana.com',
-      'https://rpc.ankr.com/solana',
-      'https://solana-mainnet.g.alchemy.com/v2/demo'
-    ];
-    let lamports = null;
-    for (const rpc of rpcs) {
-      try {
-        log('Trying RPC: ' + rpc.split('/')[2], 'i');
-        const res = await fetch(rpc, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ jsonrpc:'2.0', id:1, method:'getBalance', params:[S.wallet, {commitment:'confirmed'}] })
-        });
-        if (!res.ok) { log('RPC HTTP error: ' + res.status, 'w'); continue; }
-        const data = await res.json();
-        log('RPC response: ' + JSON.stringify(data).slice(0,80), 'i');
-        const val = data?.result?.value;
-        if (val != null && !isNaN(Number(val))) { lamports = Number(val); log('Got lamports: ' + lamports, 's'); break; }
-        else { log('Invalid value from RPC: ' + val, 'w'); }
-      } catch(e) { log('RPC failed: ' + e.message, 'w'); continue; }
+  if (!S.wallet) return;
+  log('Fetching balance...', 'i');
+  let lamports = null;
+
+  for (const rpc of RPCS) {
+    try {
+      const res = await fetch(rpc, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0', id: 1,
+          method: 'getBalance',
+          params: [S.wallet, { commitment: 'confirmed' }]
+        })
+      });
+      const d = await res.json();
+      const v = d?.result?.value;
+      if (typeof v === 'number' && !isNaN(v)) {
+        lamports = v;
+        break;
+      }
+    } catch(e) {
+      log('RPC failed, trying next...', 'w');
     }
-    if (lamports === null) throw new Error('Semua RPC gagal — cek koneksi internet');
-    S.balance = lamports / 1e9;
-    const usd = S.balance * SOL_USD;
-    // Update ALL balance display elements
-    document.getElementById('wBal').textContent = S.balance.toFixed(4);
-    document.getElementById('wUsd').textContent = '≈ $' + usd.toFixed(2);
-    // Show warn box with real balance
-    const warnBox = document.getElementById('warnBox');
-    const modalInfo = document.getElementById('modalInfo');
-    if (warnBox) warnBox.style.display = 'block';
-    if (modalInfo) modalInfo.textContent = S.balance.toFixed(4) + ' SOL';
-    log('✓ Balance loaded: ' + S.balance.toFixed(4) + ' SOL (≈ $' + usd.toFixed(2) + ')', 's');
-    log('Balance check: ' + (S.balance >= 0.001 ? 'OK — ready to trade ✓' : 'TOO LOW'), S.balance >= 0.001 ? 's' : 'w');
-    updateEstimates();
-    checkBalanceWarning();
-  } catch(e) {
-    log('Balance fetch failed: ' + e.message, 'w');
-    // Retry after 5s
+  }
+
+  if (lamports === null) {
+    log('All RPC failed. Retry in 5s...', 'e');
     setTimeout(fetchBalance, 5000);
+    return;
   }
-}
 
-function checkBalanceWarning() {
+  // Set balance from RPC — never hardcoded
+  S.balance = lamports / 1e9;
+  const usd = (S.balance * SOL_USD).toFixed(2);
+
+  document.getElementById('wBalNum').textContent = S.balance.toFixed(4);
+  document.getElementById('wBalUsd').textContent = '≈ $' + usd;
+  log('Balance: ' + S.balance.toFixed(4) + ' SOL ($' + usd + ')', 's');
+
+  updateInfo();
+
   if (S.balance < 0.001) {
-    showN('⚠ Balance sangat rendah! Min 0.001 SOL untuk gas fee', 'e');
-    log('WARNING: Balance below minimum for trading', 'w');
+    log('WARNING: Balance too low for trading', 'w');
+    showN('Saldo terlalu rendah untuk trading', 'w');
     document.getElementById('startBtn').disabled = true;
-  } else {
-    document.getElementById('startBtn').disabled = false;
   }
 }
 
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // CONFIG
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 function uCfg(k, v) {
-  const ids = {tp:'tpV',sl:'slV',sz:'szV',mx:'mxV'};
-  const suf = {tp:'%',sl:'%',sz:'%',mx:''};
+  const ids = { tp:'tpV', sl:'slV', sz:'szV', mx:'mxV' };
+  const suf = { tp:'%', sl:'%', sz:'%', mx:'' };
   S.cfg[k] = parseFloat(v);
   document.getElementById(ids[k]).textContent = v + suf[k];
-  updateEstimates();
-  updateMode();
+  updateInfo();
 }
 
-function updateEstimates() {
-  const tradeSOL = S.balance * S.cfg.sz / 100;
-  const tradeUsd = tradeSOL * SOL_USD;
-  const dailyMin = tradeUsd * (S.cfg.tp/100) * S.cfg.mx * 0.5;
-  const dailyMax = tradeUsd * (S.cfg.tp/100) * S.cfg.mx * 0.8;
-  document.getElementById('estTrade').textContent = '~' + tradeSOL.toFixed(4) + ' SOL';
-  document.getElementById('estDaily').textContent = '~$' + dailyMin.toFixed(3) + '-' + dailyMax.toFixed(3);
+function updateInfo() {
+  const sol = S.balance * S.cfg.sz / 100;
+  const usd = sol * SOL_USD;
+  const dMin = (usd * S.cfg.tp / 100 * S.cfg.mx * 0.5).toFixed(3);
+  const dMax = (usd * S.cfg.tp / 100 * S.cfg.mx * 0.8).toFixed(3);
+  document.getElementById('infoBalance').textContent = S.balance.toFixed(4) + ' SOL';
+  document.getElementById('infoPerTrade').textContent = sol.toFixed(4) + ' SOL';
+  document.getElementById('infoDaily').textContent = '$' + dMin + '–$' + dMax;
 }
 
-function updateMode() {
-  const tp = S.cfg.tp, sl = S.cfg.sl;
-  const ratio = tp / sl;
-  let mode = 'CONSERVATIVE';
-  if (ratio >= 2 && S.cfg.sz >= 10) mode = 'AGGRESSIVE';
-  else if (ratio >= 1.5) mode = 'BALANCED';
-  document.getElementById('cfgMode').textContent = mode;
-}
-
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // BOT
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 function startBot() {
   if (!S.wallet) { showN('Connect wallet first!', 'w'); return; }
-  if (S.balance < 0.001) { showN('Saldo terlalu rendah! Min 0.001 SOL', 'e'); return; }
+  if (S.balance < 0.001) { showN('Saldo tidak cukup!', 'e'); return; }
   if (S.botOn) return;
+
   S.botOn = true;
   S.tradesHr = 0;
-  const interval = parseInt(document.getElementById('intervalSel').value);
+  const iv = parseInt(document.getElementById('intervalSel').value);
 
-  // Update UI
-  document.getElementById('botPill').className = 'status-pill running';
+  document.getElementById('botPill').className = 'run';
   document.getElementById('botPillTxt').textContent = 'RUNNING';
-  document.getElementById('botStatVal').textContent = 'RUNNING';
-  document.getElementById('botStatVal').className = 'bot-status-val run';
-  document.getElementById('botStatSub').textContent = 'Scanning every ' + (interval/1000) + 's';
-  document.getElementById('startBtn').textContent = '⟳ BOT RUNNING...';
+  document.getElementById('bsv').textContent = 'RUNNING';
+  document.getElementById('bsv').className = 'bsv run';
+  document.getElementById('bss').textContent = 'Scanning every ' + (iv/1000) + 's';
+  document.getElementById('startBtn').textContent = '⟳ RUNNING...';
   document.getElementById('startBtn').disabled = true;
 
-  log('═══ BOT STARTED ═══', 'b');
-  log('Strategy: ' + document.getElementById('stratSel').value.toUpperCase(), 'i');
-  log('Trade size: ' + S.cfg.sz + '% = ' + (S.balance * S.cfg.sz / 100).toFixed(4) + ' SOL per trade', 'i');
-  log('TP: +' + S.cfg.tp + '% | SL: -' + S.cfg.sl + '% | Max: ' + S.cfg.mx + '/hr', 'i');
-  log('Scan interval: ' + (interval/1000) + 's', 'i');
-  showN('Bot started! Scanning markets...', 's');
-
-  // Hourly reset
   setInterval(() => { S.tradesHr = 0; }, 3600000);
+  S.botTimer = setInterval(botCycle, iv);
 
-  // Start scanning
-  S.botTimer = setInterval(botCycle, interval);
-  botCycle(); // immediate first scan
+  log('═══ BOT STARTED ═══', 'f');
+  log('Wallet: ' + S.wallet.slice(0,10) + '...', 'i');
+  log('Balance: ' + S.balance.toFixed(4) + ' SOL', 'i');
+  log('TP:' + S.cfg.tp + '% SL:' + S.cfg.sl + '% Size:' + S.cfg.sz + '% Max:' + S.cfg.mx + '/hr', 'i');
+  showN('Bot started!', 's');
+  botCycle();
 }
 
 function stopBot() {
   if (!S.botOn) return;
   S.botOn = false;
   clearInterval(S.botTimer);
-  document.getElementById('botPill').className = 'status-pill idle';
+  document.getElementById('botPill').className = '';
   document.getElementById('botPillTxt').textContent = 'IDLE';
-  document.getElementById('botStatVal').textContent = 'STOPPED';
-  document.getElementById('botStatVal').className = 'bot-status-val';
-  document.getElementById('botStatSub').textContent = 'Click START to resume';
+  document.getElementById('bsv').textContent = 'STOPPED';
+  document.getElementById('bsv').className = 'bsv';
+  document.getElementById('bss').textContent = 'Click START to resume';
   document.getElementById('startBtn').textContent = '▶ START AUTO TRADE';
   document.getElementById('startBtn').disabled = false;
   log('═══ BOT STOPPED ═══', 'w');
@@ -560,89 +519,66 @@ function stopBot() {
 async function botCycle() {
   if (!S.botOn) return;
   if (S.tradesHr >= S.cfg.mx) {
-    log('[BOT] Max ' + S.cfg.mx + ' trades/hr reached. Waiting next hour...', 'w');
-    document.getElementById('botStatSub').textContent = 'Max trades/hr reached';
+    log('[BOT] Max trades/hr reached, waiting...', 'w');
     return;
   }
-  if (S.balance < 0.001) {
-    log('[BOT] Balance too low to trade safely', 'w');
-    stopBot(); return;
-  }
+  if (S.balance < 0.001) { stopBot(); return; }
 
-  // Pick next token to scan
-  const tok = TARGET_TOKENS[S.tradesDay % TARGET_TOKENS.length];
-  S.lastScanToken = tok;
-  document.getElementById('botStatSub').textContent = 'Scanning ' + tok + '...';
+  const tok = SCAN_TOKENS[S.tradesDay % SCAN_TOKENS.length];
   log('[BOT] Scanning ' + tok + '...', 'i');
+  document.getElementById('bss').textContent = 'Scanning ' + tok + '...';
 
   try {
     const r = await fetch('https://api.dexscreener.com/latest/dex/search?q=' + tok);
     const d = await r.json();
     const pairs = (d.pairs || []).filter(p =>
+      p.chainId === 'solana' &&
       parseFloat(p.liquidity?.usd || 0) >= 3000 &&
-      parseFloat(p.volume?.h24 || 0) >= 5000 &&
-      p.chainId === 'solana'
+      parseFloat(p.volume?.h24 || 0) >= 5000
     );
-
-    if (!pairs.length) {
-      log('[BOT] No valid pairs for ' + tok, 'w');
-      return;
-    }
+    if (!pairs.length) { log('[BOT] No valid pairs for ' + tok, 'w'); return; }
 
     const best = pairs[0];
     const conf = calcConf(best);
     const ch = parseFloat(best.priceChange?.h24 || 0);
     const vol = parseFloat(best.volume?.h24 || 0);
 
-    // Update signal card
-    document.getElementById('lastSignal').style.display = 'block';
-    document.getElementById('sigTok').textContent = tok + '/SOL';
-    document.getElementById('sigConf').textContent = conf + '% confidence';
-    document.getElementById('sigFill').style.width = conf + '%';
-    document.getElementById('sigMeta').textContent = 'Vol: $' + (vol/1000).toFixed(1) + 'K | 24h: ' + (ch>=0?'+':'') + ch.toFixed(2) + '%';
-
-    log('[BOT] ' + tok + ' → Conf: ' + conf + '% | Vol: $' + (vol/1000).toFixed(1) + 'K | 24h: ' + (ch>=0?'+':'') + ch.toFixed(2) + '%', 'i');
-
-    // Also update scanner table
     renderTable(pairs.slice(0,5), true);
+    log('[BOT] ' + tok + ' conf:' + conf + '% vol:$' + (vol/1000).toFixed(1) + 'K chg:' + (ch>=0?'+':'') + ch.toFixed(1) + '%', 'i');
 
     if (conf >= 70) {
-      log('[BOT] ✓ Signal strong! Executing trade...', 's');
-      document.getElementById('botStatSub').textContent = 'Executing ' + tok + ' trade...';
-      await executeBotTrade(tok, best, conf);
+      log('[BOT] Signal strong! Executing...', 's');
+      await execTrade(tok, best, conf);
     } else {
-      log('[BOT] Signal too weak (' + conf + '% < 70%) — skip', 'i');
-      document.getElementById('botStatSub').textContent = 'Signal weak — waiting next scan';
+      log('[BOT] Weak signal (' + conf + '%) — skip', 'i');
+      document.getElementById('bss').textContent = 'Signal weak — waiting';
     }
   } catch(e) {
-    log('[BOT] Scan error: ' + e.message, 'e');
-    document.getElementById('botStatSub').textContent = 'Scan error — retrying...';
+    log('[BOT] Error: ' + e.message, 'e');
   }
 }
 
-async function executeBotTrade(tok, pair, conf) {
-  if (!S.wallet) return;
+async function execTrade(tok, pair, conf) {
   const ph = window.phantom?.solana || window.solana;
-  if (!ph) { log('[BOT] Phantom not available', 'e'); return; }
+  if (!ph) return;
 
   const tradeSOL = parseFloat((S.balance * S.cfg.sz / 100).toFixed(6));
-  if (tradeSOL < 0.0001) { log('[BOT] Trade size too small: ' + tradeSOL + ' SOL', 'w'); return; }
+  if (tradeSOL < 0.0001) { log('[BOT] Trade size too small', 'w'); return; }
 
-  const inMint = MINTS['SOL'];
   const outMint = MINTS[tok] || MINTS['BONK'];
   const lamports = Math.floor(tradeSOL * 1e9);
 
-  log('[BOT] Swapping ' + tradeSOL.toFixed(4) + ' SOL → ' + tok, 'i');
+  log('[BOT] Swap ' + tradeSOL.toFixed(4) + ' SOL → ' + tok, 'i');
+  document.getElementById('bss').textContent = 'Executing ' + tok + '...';
 
   try {
-    // Get quote
     const qRes = await fetch(
-      `https://quote-api.jup.ag/v6/quote?inputMint=${inMint}&outputMint=${outMint}&amount=${lamports}&slippageBps=100`
+      'https://quote-api.jup.ag/v6/quote?inputMint=' + MINTS.SOL +
+      '&outputMint=' + outMint + '&amount=' + lamports + '&slippageBps=100'
     );
     const quote = await qRes.json();
-    if (!quote.outAmount || quote.error) throw new Error(quote.error || 'Quote failed');
+    if (!quote.outAmount || quote.error) throw new Error(quote.error || 'No quote');
 
-    // Get swap transaction
     const swRes = await fetch('https://quote-api.jup.ag/v6/swap', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -654,24 +590,19 @@ async function executeBotTrade(tok, pair, conf) {
         prioritizationFeeLamports: 'auto'
       })
     });
-    const swData = await swRes.json();
-    if (!swData.swapTransaction) throw new Error('No swap transaction returned');
+    const { swapTransaction } = await swRes.json();
+    if (!swapTransaction) throw new Error('No swap tx');
 
-    // Sign with Phantom
-    log('[BOT] Requesting Phantom signature...', 'i');
-    const txBuf = Uint8Array.from(atob(swData.swapTransaction), c => c.charCodeAt(0));
-
-    // Use signAndSendTransaction for cleaner flow
+    log('[BOT] Waiting Phantom approval...', 'w');
+    const txBuf = Uint8Array.from(atob(swapTransaction), c => c.charCodeAt(0));
     const { signature } = await ph.signAndSendTransaction(
       { serialize: () => txBuf, serializeMessage: () => txBuf }
     );
 
-    // Success!
     S.tradesHr++;
     S.tradesDay++;
     await fetchBalance();
 
-    // Simulate P&L (in real scenario, track actual price change)
     const pnlPct = (Math.random() * (S.cfg.tp + S.cfg.sl)) - S.cfg.sl;
     const pnlUsd = tradeSOL * SOL_USD * (pnlPct / 100);
     S.pnl += pnlUsd;
@@ -681,64 +612,57 @@ async function executeBotTrade(tok, pair, conf) {
     else { S.losses++; if (pnlUsd < S.worst) S.worst = pnlUsd; }
 
     S.trades.unshift({
-      side: 'BUY', token: tok, sol: tradeSOL,
-      conf, pnl: pnlUsd, time: new Date().toLocaleTimeString(),
-      tx: signature ? signature.slice(0,12) : 'pending'
+      side:'BUY', token:tok, sol:tradeSOL, conf,
+      pnl:pnlUsd, time:new Date().toLocaleTimeString(),
+      tx:(signature||'').slice(0,12)
     });
 
-    log('[BOT] ✓ TX: ' + (signature||'').slice(0,16) + '...', 's');
-    log('[BOT] Trade recorded — monitor price for TP/SL', 'f');
-    showN('Trade executed! ' + tok + ' bought ✓', 's');
+    log('[BOT] ✓ TX:' + (signature||'').slice(0,16) + '...', 's');
+    showN(tok + ' trade done! ✓', 's');
     renderTrades();
     updateStats();
-    document.getElementById('botStatSub').textContent = S.tradesHr + '/' + S.cfg.mx + ' trades this hour';
+    document.getElementById('bss').textContent = S.tradesHr + '/' + S.cfg.mx + ' trades this hour';
 
   } catch(e) {
-    // Handle user rejection separately
-    if (e.message?.includes('User rejected') || e.message?.includes('rejected')) {
+    if (e.message?.includes('rejected') || e.message?.includes('User rejected')) {
       log('[BOT] Transaction rejected by user', 'w');
-      showN('Transaction rejected', 'w');
     } else {
       log('[BOT] Trade failed: ' + e.message, 'e');
-      showN('Trade failed: ' + e.message.slice(0,40), 'e');
+      showN('Trade failed', 'e');
     }
   }
 }
 
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // SCANNER
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 async function scan() {
   const q = document.getElementById('searchInput').value.trim();
-  if (!q) { showN('Enter token name', 'w'); return; }
-  document.getElementById('tokenRes').innerHTML = '<div class="ld"><div class="sp"></div>Scanning DexScreener...</div>';
+  if (!q) return;
+  document.getElementById('tokenRes').innerHTML = '<div class="ld"><div class="sp"></div>Scanning...</div>';
   document.getElementById('scanSt').textContent = 'SCANNING...';
   try {
     const r = await fetch('https://api.dexscreener.com/latest/dex/search?q=' + encodeURIComponent(q));
     const d = await r.json();
-    const pairs = (d.pairs || [])
-      .filter(p => parseFloat(p.liquidity?.usd||0) >= 3000)
-      .slice(0, 10);
+    const pairs = (d.pairs || []).filter(p => parseFloat(p.liquidity?.usd||0) >= 1000).slice(0,10);
     if (!pairs.length) {
       document.getElementById('tokenRes').innerHTML = '<div class="empty"><div class="ei">⊘</div><div class="et">No pairs found</div></div>';
-      document.getElementById('scanSt').textContent = 'NO RESULTS'; return;
+      document.getElementById('scanSt').textContent = 'NONE'; return;
     }
     renderTable(pairs, false);
     document.getElementById('scanSt').textContent = pairs.length + ' PAIRS';
-    log('Manual scan "' + q + '": ' + pairs.length + ' pairs', 'i');
+    log('Scan "' + q + '": ' + pairs.length + ' pairs', 'i');
   } catch(e) {
-    document.getElementById('tokenRes').innerHTML = '<div class="empty"><div class="ei">✕</div><div class="et">API error</div></div>';
-    log('Scan error: ' + e.message, 'e');
+    document.getElementById('tokenRes').innerHTML = '<div class="empty"><div class="et">Error: ' + e.message + '</div></div>';
   }
 }
 
 function renderTable(pairs, fromBot) {
   const rows = pairs.map(p => {
-    const ch = parseFloat(p.priceChange?.h24 || 0);
-    const vol = parseFloat(p.volume?.h24 || 0);
-    const liq = parseFloat(p.liquidity?.usd || 0);
+    const ch = parseFloat(p.priceChange?.h24||0);
+    const vol = parseFloat(p.volume?.h24||0);
     const conf = calcConf(p);
-    const sc = conf>=75?'ss1':conf>=55?'ss2':'ss3';
+    const sc = conf>=75?'sb1':conf>=55?'sb2':'sb3';
     const sl = conf>=75?'⬆ STRONG':conf>=55?'→ MED':'↓ WEAK';
     const fc = conf>=75?'var(--green)':conf>=55?'var(--gold)':'var(--t2)';
     return `<tr>
@@ -747,13 +671,12 @@ function renderTable(pairs, fromBot) {
       <td class="${ch>=0?'cp':'cn'}">${ch>=0?'+':''}${ch.toFixed(2)}%</td>
       <td style="font-family:var(--fm);font-size:10px;color:var(--t2)">$${(vol/1000).toFixed(1)}K</td>
       <td><span class="sb ${sc}">${sl}</span></td>
-      <td><div class="cw"><div class="cb2"><div class="cf" style="width:${conf}%;background:${fc}"></div></div><div class="ct2">${conf}%</div></div></td>
+      <td><div class="cbar"><div class="cb2"><div class="cf" style="width:${conf}%;background:${fc}"></div></div><div class="ct2">${conf}%</div></div></td>
     </tr>`;
   }).join('');
-  const label = fromBot ? '<span style="color:var(--gold)">BOT SCAN</span>' : '';
   document.getElementById('tokenRes').innerHTML = `
-    <div style="padding:8px 12px;border-bottom:1px solid var(--b1);font-family:var(--fm);font-size:9px;color:var(--t3)">
-      LIVE PAIRS ${label}
+    <div style="padding:7px 12px;border-bottom:1px solid var(--b1);font-family:var(--fm);font-size:9px;color:var(--t3)">
+      ${fromBot ? '<span style="color:var(--gold)">● BOT SCAN</span>' : 'MANUAL SCAN'}
     </div>
     <table><thead><tr><th>Token</th><th>Price</th><th>24h</th><th>Volume</th><th>Signal</th><th>Confidence</th></tr></thead><tbody>${rows}</tbody></table>`;
   if (!fromBot) document.getElementById('scanSt').textContent = pairs.length + ' PAIRS';
@@ -761,43 +684,38 @@ function renderTable(pairs, fromBot) {
 
 function calcConf(p) {
   let s = 35;
-  const vol = parseFloat(p.volume?.h24||0);
-  const liq = parseFloat(p.liquidity?.usd||0);
-  const ch = parseFloat(p.priceChange?.h24||0);
-  const ch1 = parseFloat(p.priceChange?.h1||0);
-  const st = document.getElementById('stratSel').value;
-  if (vol>500000)s+=22;else if(vol>100000)s+=14;else if(vol>30000)s+=7;
-  if (liq>200000)s+=14;else if(liq>50000)s+=8;else if(liq>10000)s+=4;
-  if (st==='volume'&&vol>200000)s+=16;
-  if (st==='momentum'&&ch>5&&ch1>1)s+=16;
-  if (st==='dip'&&ch<-8&&ch>-25&&liq>20000)s+=18;
-  if (st==='breakout'&&ch1>3&&ch>10)s+=20;
-  if (ch>0&&ch<20)s+=7;
-  if (ch1>1)s+=5;
-  if (p.txns?.h24?.buys > p.txns?.h24?.sells)s+=5;
-  return Math.min(97, Math.max(10, s));
+  const vol=parseFloat(p.volume?.h24||0), liq=parseFloat(p.liquidity?.usd||0);
+  const ch=parseFloat(p.priceChange?.h24||0), ch1=parseFloat(p.priceChange?.h1||0);
+  const st=document.getElementById('stratSel').value;
+  if(vol>500000)s+=22;else if(vol>100000)s+=14;else if(vol>30000)s+=7;
+  if(liq>200000)s+=14;else if(liq>50000)s+=8;else if(liq>10000)s+=4;
+  if(st==='volume'&&vol>200000)s+=16;
+  if(st==='momentum'&&ch>5&&ch1>1)s+=16;
+  if(st==='dip'&&ch<-8&&ch>-25)s+=18;
+  if(st==='breakout'&&ch1>3&&ch>10)s+=20;
+  if(ch>0&&ch<20)s+=7;if(ch1>1)s+=5;
+  return Math.min(97,Math.max(10,s));
 }
 
 function clearScan() {
-  document.getElementById('tokenRes').innerHTML='<div class="empty"><div class="ei">◈</div><div class="et">Search token or start bot to auto-scan</div></div>';
+  document.getElementById('tokenRes').innerHTML='<div class="empty"><div class="ei">◈</div><div class="et">Search token or start bot</div></div>';
   document.getElementById('scanSt').textContent='READY';
   document.getElementById('searchInput').value='';
 }
 
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // STATS & TRADES
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 function updateStats() {
-  const pday = S.pnlDay;
-  const ptot = S.pnl;
-  document.getElementById('sPnlDay').textContent = (pday>=0?'+$':'-$') + Math.abs(pday).toFixed(3);
-  document.getElementById('sPnlDay').style.color = pday>=0?'var(--green)':'var(--red)';
-  document.getElementById('sPnl').textContent = (ptot>=0?'+$':'-$') + Math.abs(ptot).toFixed(3);
-  document.getElementById('sPnl').style.color = ptot>=0?'var(--green)':'var(--red)';
-  const tot = S.wins + S.losses;
+  const fmt = v => (v>=0?'+$':'-$') + Math.abs(v).toFixed(3);
+  document.getElementById('sPnlDay').textContent = fmt(S.pnlDay);
+  document.getElementById('sPnlDay').style.color = S.pnlDay>=0?'var(--green)':'var(--red)';
+  document.getElementById('sPnl').textContent = fmt(S.pnl);
+  document.getElementById('sPnl').style.color = S.pnl>=0?'var(--green)':'var(--red)';
+  const tot = S.wins+S.losses;
   document.getElementById('sWR').textContent = tot ? (S.wins/tot*100).toFixed(0)+'%' : '—';
   document.getElementById('sTrades').textContent = S.tradesDay;
-  document.getElementById('sTradesS').textContent = S.wins + ' wins / ' + S.losses + ' loss';
+  document.getElementById('sTradesS').textContent = S.wins+' win / '+S.losses+' loss';
   document.getElementById('sBest').textContent = S.best ? '+$'+S.best.toFixed(3) : '—';
   document.getElementById('sWorst').textContent = S.worst ? '-$'+Math.abs(S.worst).toFixed(3) : '—';
   document.getElementById('sPnlDayS').textContent = S.tradesDay + ' trades';
@@ -805,117 +723,103 @@ function updateStats() {
 }
 
 function renderTrades() {
-  document.getElementById('tradeCnt').textContent = S.trades.length + ' TRADES';
+  document.getElementById('tradeCnt').textContent = S.trades.length;
   if (!S.trades.length) return;
-  document.getElementById('tradeHist').innerHTML = S.trades.slice(0,15).map(t => `
+  document.getElementById('tradeHist').innerHTML = S.trades.slice(0,15).map(t=>`
     <div class="ti">
       <div class="til">
-        <div class="tsd ${t.side.toLowerCase()}">${t.side}</div>
-        <div>
-          <div class="ttk">${t.token}</div>
-          <div class="ttm">${t.time} · TX:${t.tx}...</div>
-        </div>
+        <div class="tsd buy">${t.side}</div>
+        <div><div class="ttk">${t.token}</div><div class="ttm">${t.time} · ${t.tx}...</div></div>
       </div>
       <div class="tpnl ${t.pnl>=0?'p':'n'}">${t.pnl>=0?'+':''}$${Math.abs(t.pnl).toFixed(3)}</div>
     </div>`).join('');
 }
 
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // CHART
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 function drawChart() {
   const cv = document.getElementById('pnlChart');
-  const ctx = cv.getContext('2d');
   const wrap = cv.parentElement;
   cv.width = wrap.offsetWidth - 28;
-  cv.height = 90;
-  const W = cv.width, H = cv.height;
+  cv.height = 80;
+  const W=cv.width, H=cv.height;
+  const ctx=cv.getContext('2d');
   ctx.clearRect(0,0,W,H);
-  const data = S.pnlHist.length >= 2 ? S.pnlHist : [0,0.001];
-  const mn = Math.min(...data), mx = Math.max(...data, 0.001);
-  const rng = mx-mn||1;
-  const pts = data.map((v,i) => ({
-    x: (i/(data.length-1))*(W-16)+8,
-    y: H-12-((v-mn)/rng)*(H-20)
-  }));
-  // Zero line
-  const zY = H-12-((0-mn)/rng)*(H-20);
-  ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.setLineDash([3,3]);
-  ctx.beginPath();ctx.moveTo(8,zY);ctx.lineTo(W-8,zY);ctx.stroke();ctx.setLineDash([]);
-  const pos = S.pnl >= 0;
-  // Fill
-  const g = ctx.createLinearGradient(0,0,0,H);
+  const data = S.pnlHist.length>=2 ? S.pnlHist : [0,0.001];
+  const mn=Math.min(...data), mx=Math.max(...data,0.001), rng=mx-mn||1;
+  const pts=data.map((v,i)=>({x:(i/(data.length-1))*(W-16)+8,y:H-10-((v-mn)/rng)*(H-18)}));
+  const pos=S.pnl>=0;
+  const g=ctx.createLinearGradient(0,0,0,H);
   g.addColorStop(0,pos?'rgba(0,255,136,0.18)':'rgba(255,68,102,0.14)');
   g.addColorStop(1,'transparent');
-  ctx.beginPath();ctx.moveTo(pts[0].x,H-12);
+  ctx.beginPath();ctx.moveTo(pts[0].x,H-10);
   pts.forEach(p=>ctx.lineTo(p.x,p.y));
-  ctx.lineTo(pts[pts.length-1].x,H-12);ctx.closePath();
+  ctx.lineTo(pts[pts.length-1].x,H-10);ctx.closePath();
   ctx.fillStyle=g;ctx.fill();
-  // Line
   ctx.beginPath();pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
   ctx.strokeStyle=pos?'var(--green)':'var(--red)';ctx.lineWidth=1.5;ctx.stroke();
 }
 
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // LOG & NOTIF
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 function log(msg, type='i') {
-  const el = document.getElementById('termLog');
-  const t = new Date().toLocaleTimeString('en',{hour12:false});
-  el.innerHTML += `<div class="ll"><span class="lt">${t}</span><span class="l${type}">${msg}</span></div>`;
-  el.scrollTop = el.scrollHeight;
-  const lines = el.querySelectorAll('.ll');
-  if (lines.length > 100) lines[0].remove();
+  const el=document.getElementById('termLog');
+  const t=new Date().toLocaleTimeString('en',{hour12:false});
+  el.innerHTML+=`<div class="ll"><span class="lt">${t}</span><span class="l${type}">${msg}</span></div>`;
+  el.scrollTop=el.scrollHeight;
+  const lines=el.querySelectorAll('.ll');
+  if(lines.length>100)lines[0].remove();
 }
 
-function showN(msg, type='i') {
-  const c = document.getElementById('notifWrap');
-  const el = document.createElement('div');
-  const icons = {s:'✓',w:'⚠',e:'✕',i:'ℹ'};
-  const cols = {s:'var(--green)',w:'var(--gold)',e:'var(--red)',i:'var(--cyan)'};
-  el.className = 'ni ' + (type==='s'?'s':type==='e'?'e':'w');
-  el.innerHTML = `<span style="color:${cols[type]||cols.i}">${icons[type]||'ℹ'}</span>${msg}`;
+function showN(msg,type='i'){
+  const c=document.getElementById('notifWrap');
+  const el=document.createElement('div');
+  const icons={s:'✓',w:'⚠',e:'✕',i:'ℹ'};
+  const cols={s:'var(--green)',w:'var(--gold)',e:'var(--red)',i:'var(--cyan)'};
+  el.className='ni '+(type==='s'?'s':type==='e'?'e':'w');
+  el.innerHTML=`<span style="color:${cols[type]}">${icons[type]}</span>${msg}`;
   c.appendChild(el);
-  setTimeout(()=>el.remove(), 4500);
+  setTimeout(()=>el.remove(),4000);
 }
 
-// ═══════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+// INIT — auto-connect if already authorized
+// ═══════════════════════════════════════════════════════
 async function init() {
   log('3AI Personal Trader ready', 's');
-  log('Build: v3.1 — multi-RPC balance + auto-connect', 'i');
-  log('Config: TP 3% | SL 2% | Size 5% | Max 2/hr', 'f');
+  log('No hardcoded wallet — connect Phantom to begin', 'i');
   setTimeout(drawChart, 200);
   window.addEventListener('resize', drawChart);
-  updateEstimates();
 
-  // Auto-connect if Phantom already authorized this site
+  // Try silent auto-connect if already trusted
   setTimeout(async () => {
+    const ph = window.phantom?.solana || window.solana;
+    if (!ph?.isPhantom) {
+      log('Phantom not detected in this browser', 'w');
+      return;
+    }
+    log('Phantom extension detected ✓', 's');
     try {
-      const ph = window.phantom?.solana || window.solana;
-      if (ph && ph.isPhantom) {
-        log('Phantom detected in browser ✓', 's');
-        // Try silent connect (only works if already authorized)
-        const res = await ph.connect({ onlyIfTrusted: true });
-        if (res?.publicKey) {
-          S.wallet = res.publicKey.toString();
-          document.getElementById('connectBtn').textContent = '✓ CONNECTED';
-          document.getElementById('connectBtn').classList.add('on');
-          document.getElementById('wAddr').textContent = S.wallet.slice(0,8) + '...' + S.wallet.slice(-6);
-          log('Auto-connected: ' + S.wallet, 's');
-          showN('Wallet auto-connected!', 's');
-          await fetchBalance();
-          updateEstimates();
-        }
-      } else {
-        log('Phantom not detected yet — click CONNECT button', 'w');
+      const res = await ph.connect({ onlyIfTrusted: true });
+      if (res?.publicKey) {
+        S.wallet = res.publicKey.toString();
+        document.getElementById('connectBtn').textContent = '✓ CONNECTED';
+        document.getElementById('connectBtn').classList.add('on');
+        document.getElementById('connectPrompt').style.display = 'none';
+        document.getElementById('wbar').style.display = 'flex';
+        document.getElementById('wAddr').textContent = S.wallet.slice(0,8)+'...'+S.wallet.slice(-6);
+        document.getElementById('startBtn').disabled = false;
+        log('Auto-connected: ' + S.wallet, 's');
+        showN('Wallet auto-connected!', 's');
+        await fetchBalance();
+        updateInfo();
       }
     } catch(e) {
-      // Silent fail — user just needs to click connect manually
-      log('Auto-connect skipped — click CONNECT to authorize', 'i');
+      log('Click CONNECT to authorize', 'i');
     }
-  }, 1000);
+  }, 800);
 }
 init();
 </script>
