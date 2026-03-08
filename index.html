@@ -249,7 +249,7 @@ tbody td{padding:10px 12px;font-size:12px;vertical-align:middle}
         <div class="bot-panel">
 
           <div class="warn-box">
-            💡 Modal <strong id="modalInfo">0.03 SOL</strong> — config sudah dioptimalkan untuk modal kecil. Jaga minimal <strong>0.005 SOL</strong> untuk gas fee.
+            💡 Modal <strong id="modalInfo">0.03 SOL</strong> — config sudah dioptimalkan untuk modal kecil. Jaga minimal <strong>0.001 SOL</strong> untuk gas fee.
           </div>
 
           <div class="bot-status-box">
@@ -305,7 +305,7 @@ tbody td{padding:10px 12px;font-size:12px;vertical-align:middle}
             <div class="info-row"><div class="info-label">Min confidence</div><div class="info-val gold">70%</div></div>
             <div class="info-row"><div class="info-label">Est. per trade</div><div class="info-val" id="estTrade">~0.0015 SOL</div></div>
             <div class="info-row"><div class="info-label">Est. daily profit</div><div class="info-val g" id="estDaily">~$0.05-0.15</div></div>
-            <div class="info-row"><div class="info-label">Gas reserved</div><div class="info-val">0.005 SOL</div></div>
+            <div class="info-row"><div class="info-label">Gas reserved</div><div class="info-val">0.001 SOL</div></div>
           </div>
         </div>
       </div>
@@ -436,6 +436,7 @@ async function fetchBalance() {
     document.getElementById('wUsd').textContent = '≈ $' + usd.toFixed(2);
     document.getElementById('modalInfo').textContent = S.balance.toFixed(4) + ' SOL';
     log('Balance: ' + S.balance.toFixed(4) + ' SOL (≈ $' + usd.toFixed(2) + ')', 's');
+    log('Balance check: ' + (S.balance >= 0.001 ? 'OK — ready to trade' : 'TOO LOW'), S.balance >= 0.001 ? 's' : 'w');
     updateEstimates();
     checkBalanceWarning();
   } catch(e) {
@@ -446,8 +447,8 @@ async function fetchBalance() {
 }
 
 function checkBalanceWarning() {
-  if (S.balance < 0.005) {
-    showN('⚠ Balance sangat rendah! Min 0.005 SOL untuk gas fee', 'e');
+  if (S.balance < 0.001) {
+    showN('⚠ Balance sangat rendah! Min 0.001 SOL untuk gas fee', 'e');
     log('WARNING: Balance below minimum for trading', 'w');
     document.getElementById('startBtn').disabled = true;
   } else {
@@ -490,7 +491,7 @@ function updateMode() {
 // ═══════════════════════════════════════════
 function startBot() {
   if (!S.wallet) { showN('Connect wallet first!', 'w'); return; }
-  if (S.balance < 0.005) { showN('Saldo terlalu rendah! Min 0.005 SOL', 'e'); return; }
+  if (S.balance < 0.001) { showN('Saldo terlalu rendah! Min 0.001 SOL', 'e'); return; }
   if (S.botOn) return;
   S.botOn = true;
   S.tradesHr = 0;
@@ -543,7 +544,7 @@ async function botCycle() {
     document.getElementById('botStatSub').textContent = 'Max trades/hr reached';
     return;
   }
-  if (S.balance < 0.005) {
+  if (S.balance < 0.001) {
     log('[BOT] Balance too low to trade safely', 'w');
     stopBot(); return;
   }
@@ -605,7 +606,7 @@ async function executeBotTrade(tok, pair, conf) {
   if (!ph) { log('[BOT] Phantom not available', 'e'); return; }
 
   const tradeSOL = parseFloat((S.balance * S.cfg.sz / 100).toFixed(6));
-  if (tradeSOL < 0.001) { log('[BOT] Trade size too small: ' + tradeSOL + ' SOL', 'w'); return; }
+  if (tradeSOL < 0.0001) { log('[BOT] Trade size too small: ' + tradeSOL + ' SOL', 'w'); return; }
 
   const inMint = MINTS['SOL'];
   const outMint = MINTS[tok] || MINTS['BONK'];
