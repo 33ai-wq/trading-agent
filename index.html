@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>3AI Personal Trader</title>
+<title>333AI Personal Trader</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+
 <style>
 :root{
   --bg:#040508;--bg2:#0c1018;--bg3:#111520;
@@ -328,9 +329,11 @@ const MINTS = {
 };
 const SCAN_TOKENS = ['BONK','WIF','JUP','SOL','POPCAT'];
 const RPCS = [
+  'https://solana-mainnet.g.alchemy.com/v2/demo',
   'https://api.mainnet-beta.solana.com',
   'https://rpc.ankr.com/solana',
-  'https://solana-mainnet.g.alchemy.com/v2/demo'
+  'https://mainnet.helius-rpc.com/?api-key=1d8740dc-e5f4-421c-b823-e1bad1889eff',
+  'https://solana-api.tt-prod.net'
 ];
 
 const S = {
@@ -401,50 +404,100 @@ async function connectWallet() {
 async function fetchBalance() {
   if (!S.wallet) return;
   log('Fetching balance...', 'i');
-  let lamports = null;
 
-  for (const rpc of RPCS) {
-    try {
-      const res = await fetch(rpc, {
+  // STEP 1: Helius REST — browser-friendly, no CORS issue
+  try {
+    const r = await fetch(
+      'https://api.helius.xyz/v0/addresses/' + S.wallet + '/balances?api-key=1d8740dc-e5f4-421c-b823-e1bad1889eff',
+      { method: 'GET', headers: { 'Accept': 'application/json' } }
+    );
+    if (r.ok) {
+      const d = await r.json();
+      if (typeof d?.nativeBalance === 'number') {
+        setBalance(d.nativeBalance);
+        log('Balance via Helius ✓', 's');
+        return;
+      }
+    }
+  } catch(e) { log('Helius: ' + e.message, 'w'); }
+
+  // STEP 2: Helius RPC (JSON-RPC, CORS allowed)
+  try {
+    const r = await fetch(
+      'https://mainnet.helius-rpc.com/?api-key=1d8740dc-e5f4-421c-b823-e1bad1889eff',
+      {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jsonrpc: '2.0', id: 1,
-          method: 'getBalance',
-          params: [S.wallet, { commitment: 'confirmed' }]
-        })
-      });
-      const d = await res.json();
-      const v = d?.result?.value;
-      if (typeof v === 'number' && !isNaN(v)) {
-        lamports = v;
-        break;
+        body: JSON.stringify({ jsonrpc:'2.0', id:1, method:'getBalance', params:[S.wallet] })
       }
-    } catch(e) {
-      log('RPC failed, trying next...', 'w');
+    );
+    if (r.ok) {
+      const d = await r.json();
+      if (typeof d?.result?.value === 'number') {
+        setBalance(d.result.value);
+        log('Balance via Helius RPC ✓', 's');
+        return;
+      }
     }
-  }
+  } catch(e) { log('Helius RPC: ' + e.message, 'w'); }
 
-  if (lamports === null) {
-    log('All RPC failed. Retry in 5s...', 'e');
-    setTimeout(fetchBalance, 5000);
-    return;
-  }
+  // STEP 3: Alchemy
+  try {
+    const r = await fetch(
+      'https://solana-mainnet.g.alchemy.com/v2/demo',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc:'2.0', id:1, method:'getBalance', params:[S.wallet] })
+      }
+    );
+    if (r.ok) {
+      const d = await r.json();
+      if (typeof d?.result?.value === 'number') {
+        setBalance(d.result.value);
+        log('Balance via Alchemy ✓', 's');
+        return;
+      }
+    }
+  } catch(e) { log('Alchemy: ' + e.message, 'w'); }
 
-  // Set balance from RPC — never hardcoded
+  // STEP 4: Ankr
+  try {
+    const r = await fetch(
+      'https://rpc.ankr.com/solana',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc:'2.0', id:1, method:'getBalance', params:[S.wallet] })
+      }
+    );
+    if (r.ok) {
+      const d = await r.json();
+      if (typeof d?.result?.value === 'number') {
+        setBalance(d.result.value);
+        log('Balance via Ankr ✓', 's');
+        return;
+      }
+    }
+  } catch(e) { log('Ankr: ' + e.message, 'w'); }
+
+  log('⚠ Semua endpoint gagal. Retry 10s...', 'e');
+  showN('Gagal baca saldo — cek koneksi', 'e');
+  setTimeout(fetchBalance, 10000);
+}
+
+function setBalance(lamports) {
   S.balance = lamports / 1e9;
   const usd = (S.balance * SOL_USD).toFixed(2);
-
   document.getElementById('wBalNum').textContent = S.balance.toFixed(4);
   document.getElementById('wBalUsd').textContent = '≈ $' + usd;
-  log('Balance: ' + S.balance.toFixed(4) + ' SOL ($' + usd + ')', 's');
-
   updateInfo();
-
-  if (S.balance < 0.001) {
-    log('WARNING: Balance too low for trading', 'w');
-    showN('Saldo terlalu rendah untuk trading', 'w');
+  if (S.balance >= 0.001) {
+    document.getElementById('startBtn').disabled = false;
+    document.getElementById('bss').textContent = 'Ready — click START to trade';
+  } else {
     document.getElementById('startBtn').disabled = true;
+    log('WARNING: Balance too low to trade', 'w');
   }
 }
 
