@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>3,333,333.33333ai — Smart Trading Agent</title>
+<title>XH Agents — AI Trading Assistant</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -271,12 +271,14 @@
   <!-- HEADER -->
   <header>
     <div class="logo-block">
-      <div class="logo-name">3,333,333.33333<span style="color:var(--neon2)">ai</span></div>
-      <div class="logo-sub">▸ Your Smart & Reliable Assistant AI For Trade</div>
+    <div class="logo-name">XH<span style="color:var(--neon2)"> Agents</span></div>
+    <div class="logo-sub">▸ Autonomous AI Trading Assistant</div>
     </div>
     <div class="header-right">
       <div class="status-dot"></div>
       <span class="status-label">AGENT ONLINE</span>
+      <span class="status-label" id="balLabel" style="color:var(--neon)">0 msgs</span>
+      <button class="btn" onclick="openTopup()">TOP UP</button>
       <button class="btn danger" onclick="toggleAgent()">STOP AGENT</button>
     </div>
   </header>
@@ -390,11 +392,11 @@
 
         <div class="chat-area" id="chatArea">
           <div class="msg">
-            <div class="msg-head agent">3,333,333.33333ai ▸ SYSTEM</div>
+            <div class="msg-head agent">XH Agent ▸ SYSTEM</div>
             <div class="msg-body">
-              Selamat datang! Saya adalah AI Trading Agent Anda.<br>
-              Saat ini memantau <strong style="color:var(--neon)">DexScreener</strong> untuk pair <strong style="color:var(--neon2)">SOL/USDT</strong> di Solana.<br><br>
-              Tanyakan apa saja: analisis token, sinyal entry/exit, deteksi rug pull, atau minta saya untuk execute trade otomatis.
+              Selamat datang di <strong style="color:var(--neon)">XH Agents</strong> AI Trading Assistant.<br>
+              Chat berbasis USDC: <strong style="color:var(--neon2)">$0.1 per pesan</strong>. Top-up otomatis via Treasury.<br><br>
+              Tanyakan: analisis token, sinyal entry/exit, deteksi rug pull, atau strategi. (Mode demo: data sinyal di bawah adalah SIMULATED.)
             </div>
           </div>
         </div>
@@ -409,7 +411,7 @@
 
   <!-- SIGNALS TABLE -->
   <div class="panel signals-panel" style="margin-top:16px">
-    <div class="panel-title">Live Signals — DexScreener Feed</div>
+    <div class="panel-title">Live Signals — SIMULATED Feed (Demo)</div>
     <div class="table-wrap">
       <table>
         <thead>
@@ -433,7 +435,25 @@
   <!-- LOG -->
   <div class="log-panel" id="logPanel"></div>
 
-  <div class="footer">3,333,333.33333ai • DEXSCREENER TRADING AGENT • USE AT YOUR OWN RISK — NOT FINANCIAL ADVICE</div>
+  <div class="footer">XH Agents • AI Trading Assistant • Pay-per-message $0.1 USDC • SIMULATED signals — NOT FINANCIAL ADVICE</div>
+
+  <!-- TOPUP MODAL -->
+  <div class="catalog-modal" id="topupModal" onclick="if(event.target===this)closeTopup()" style="z-index:1200">
+    <div class="catalog-inner" style="max-width:420px">
+      <button class="catalog-close" onclick="closeTopup()">✕</button>
+      <h3 style="font-family:'Orbitron';color:var(--neon);margin-bottom:0.5rem">Top Up Chat Credits</h3>
+      <p style="font-size:0.78rem;color:var(--muted);margin-bottom:1rem">$0.1 USDC = 1 message. Send USDC to Treasury with memo = order ID. Auto-credited.</p>
+      <label class="config-label">Amount (USDC)</label>
+      <input class="inp" type="number" id="topupAmt" value="1" min="0.1" step="0.1">
+      <label class="config-label" style="margin-top:0.8rem">Network</label>
+      <select class="inp" id="topupNet">
+        <option value="solana">Solana</option>
+        <option value="base">Base</option>
+      </select>
+      <button class="btn success" style="width:100%;margin-top:1rem" onclick="doTopup()">CREATE INVOICE →</button>
+      <p id="topupStatus" style="font-size:0.72rem;margin-top:0.75rem;min-height:3em;color:var(--neon)"></p>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -543,12 +563,26 @@ function executeTrade(pair, sig) {
   appendMsg('agent', `✅ Trade executed: <strong>[${sig}] ${pair}</strong> — Size $${size} USDT. Stop Loss & Take Profit set. Monitoring position...`);
 }
 
-// ===== CHAT =====
+// ===== CHAT (pay-per-message, backend proxy) =====
+// Stable anonymous user id (per browser)
+function getUid() {
+  let u = localStorage.getItem('xh_uid');
+  if (!u) { u = 'u' + Math.random().toString(36).slice(2,10); localStorage.setItem('xh_uid', u); }
+  return u;
+}
+async function refreshBalance() {
+  try {
+    const r = await fetch('/api/chat/balance', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:getUid()})});
+    const j = await r.json();
+    const el = document.getElementById('balLabel');
+    if (el) el.textContent = (j.balance||0) + ' msgs';
+  } catch(e){}
+}
 function appendMsg(who, html) {
   const area = document.getElementById('chatArea');
   const div = document.createElement('div');
   div.className = 'msg';
-  div.innerHTML = `<div class="msg-head ${who}">${who==='agent'?'3,333,333.33333ai ▸ AI':'YOU ▸'}</div><div class="msg-body ${who}">${html}</div>`;
+  div.innerHTML = `<div class="msg-head ${who}">${who==='agent'?'XH Agent ▸ AI':'YOU ▸'}</div><div class="msg-body ${who}">${html}</div>`;
   area.appendChild(div);
   area.scrollTop = area.scrollHeight;
 }
@@ -558,15 +592,11 @@ function appendLoading() {
   const div = document.createElement('div');
   div.id = 'loadingMsg';
   div.className = 'msg';
-  div.innerHTML = `<div class="msg-head agent">3,333,333.33333ai ▸ THINKING</div><div class="msg-body loading"><div class="dot-loader"><span></span><span></span><span></span></div>&nbsp;Analyzing DexScreener data...</div>`;
+  div.innerHTML = `<div class="msg-head agent">XH Agent ▸ THINKING</div><div class="msg-body loading"><div class="dot-loader"><span></span><span></span><span></span></div>&nbsp;Analyzing...</div>`;
   area.appendChild(div);
   area.scrollTop = area.scrollHeight;
 }
-
-function removeLoading() {
-  const el = document.getElementById('loadingMsg');
-  if(el) el.remove();
-}
+function removeLoading() { const el=document.getElementById('loadingMsg'); if(el) el.remove(); }
 
 async function sendMsg() {
   const inp = document.getElementById('chatInput');
@@ -575,73 +605,70 @@ async function sendMsg() {
   inp.value = '';
   appendMsg('user', msg);
   appendLoading();
-
   const pair = document.getElementById('pairInput').value || 'SOL/USDT';
   const net = document.getElementById('networkSelect').value;
   const strat = document.getElementById('strategySelect').value;
   const sl = document.getElementById('stopLoss').value;
   const tp = document.getElementById('takeProfit').value;
   const size = document.getElementById('tradeSize').value;
-
-  const systemPrompt = `You are 3,333,333.33333ai — a professional crypto DeFi trading AI agent.
-You monitor DexScreener for real-time DEX data.
-Current config: Pair=${pair}, Network=${net}, Strategy=${strat}, TradeSize=$${size}USDT, SL=${sl}%, TP=${tp}%.
-You respond in concise, professional trading language. Mix English and Bahasa Indonesia if appropriate.
-Give actionable insights: entry/exit levels, risk warning, liquidity checks, rug pull signals.
-Use emojis sparingly for BUY 🟢 SELL 🔴 HOLD 🟡 signals. Keep responses under 120 words.`;
-
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: msg }]
-      })
-    });
+    const res = await fetch('/api/chat', {method:'POST',headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({user_id:getUid(), message:msg, pair, network:net, strategy:strat, sl, tp, size})});
     const data = await res.json();
-    const reply = data.content?.map(c=>c.text||'').join('') || 'Error: No response from AI.';
     removeLoading();
-    appendMsg('agent', reply.replace(/\n/g,'<br>'));
-    addLog('log-info', `AI query processed: "${msg.slice(0,40)}..."`);
+    if (data.error === 'insufficient_balance') {
+      appendMsg('agent', '⚠️ Saldo habis. Top-up ' + data.price_per_msg + ' USDC/pesan via Treasury. Klik "Top Up" di atas.');
+      openTopup();
+      return;
+    }
+    if (data.reply) {
+      appendMsg('agent', data.reply.replace(/\n/g,'<br>'));
+      refreshBalance();
+    } else {
+      appendMsg('agent', '⚠️ ' + (data.error || 'No response.'));
+    }
   } catch(e) {
     removeLoading();
-    appendMsg('agent', '⚠️ Connection error. Check API key or network. Menggunakan analisis lokal...');
-    addLog('log-err', 'API call failed: '+e.message);
+    appendMsg('agent', '⚠️ Connection error.');
   }
 }
-
 async function analyzeNow() {
   const pair = document.getElementById('pairInput').value || 'SOL/USDT';
   const strat = document.getElementById('strategySelect').value;
-  appendMsg('user', `[AUTO] Jalankan analisis lengkap untuk ${pair} dengan strategi ${strat}`);
+  appendMsg('user', `[AUTO] Jalankan analisis ${pair} — ${strat}`);
   appendLoading();
-
-  const systemPrompt = `You are 3,333,333.33333ai — a professional crypto DeFi trading AI.
-Analyze the given pair from DexScreener perspective. Give: current signal (BUY/SELL/HOLD), entry price range, stop loss, take profit, risk level, and 1 key reason. Respond in 80 words max. Mix English/Bahasa Indonesia.`;
-
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: `Analyze ${pair} on ${document.getElementById('networkSelect').value}. Strategy: ${strat}. Give trade signal now.` }]
-      })
-    });
+    const res = await fetch('/api/chat', {method:'POST',headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({user_id:getUid(), message:`Analyze ${pair}. Strategy: ${strat}. Give BUY/SELL/HOLD signal now with entry, SL, TP, risk.`, pair, network:document.getElementById('networkSelect').value, strategy:strat, sl:document.getElementById('stopLoss').value, tp:document.getElementById('takeProfit').value, size:document.getElementById('tradeSize').value})});
     const data = await res.json();
-    const reply = data.content?.map(c=>c.text||'').join('') || 'Error.';
     removeLoading();
-    appendMsg('agent', reply.replace(/\n/g,'<br>'));
-    addLog('log-action', `Analysis complete for ${pair} — signal generated`);
-  } catch(e) {
-    removeLoading();
-    appendMsg('agent', `⚠️ Tidak dapat terhubung ke AI engine. Pastikan API key aktif.`);
-  }
+    if (data.reply) { appendMsg('agent', data.reply.replace(/\n/g,'<br>')); refreshBalance(); }
+    else appendMsg('agent', '⚠️ ' + (data.error||'No response.'));
+  } catch(e) { removeLoading(); appendMsg('agent','⚠️ Connection error.'); }
+}
+
+// ===== TOPUP MODAL =====
+function openTopup() {
+  document.getElementById('topupModal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeTopup() {
+  document.getElementById('topupModal').classList.remove('open');
+  document.body.style.overflow='';
+}
+async function doTopup() {
+  const amt = parseFloat(document.getElementById('topupAmt').value)||1;
+  const net = document.getElementById('topupNet').value;
+  const st = document.getElementById('topupStatus');
+  st.textContent = 'Creating invoice...';
+  try {
+    const r = await fetch('/api/chat/order', {method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({user_id:getUid(), amount:amt, network:net})});
+    const j = await r.json();
+    if (j.error) { st.textContent = j.error; return; }
+    st.innerHTML = `Send <strong>${amt} USDC</strong> to:<br><code>${j.treasury}</code><br>Memo: <code>${j.memo}</code><br>Credits: ${j.credits} msgs. Auto-credited after on-chain confirm.`;
+    refreshBalance();
+  } catch(e){ st.textContent='Error'; }
 }
 
 // ===== LIVE STATS TICKER =====
@@ -653,6 +680,9 @@ setInterval(() => {
   pv.textContent = '$' + newVal.toFixed(2);
   pv.className = 'stat-value ' + (delta > 0 ? 'up' : 'down');
 }, 3000);
+
+// init balance display
+refreshBalance();
 </script>
 </body>
 </html>
