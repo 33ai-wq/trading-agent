@@ -40,7 +40,7 @@ def load_env():
 ENV = load_env()
 NVIDIA_API_KEY = ENV.get("NVIDIA_API_KEY", "")
 NIM_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
-NIM_MODEL = "nvidia/nemotron-3-ultra-550b-a55b"  # Nemotron 3 Ultra via NVIDIA NIM (verified working)
+NIM_MODEL = "nvidia/nemotron-3-super-120b-a12b"  # Nemotron 3 Super (lighter, verified in catalog)
 
 def db():
     c = sqlite3.connect(DB)
@@ -190,6 +190,7 @@ class H(BaseHTTPRequestHandler):
         c.commit(); c.close()
         system_prompt = f"""You are XH Agent — a professional crypto/DeFi trading AI assistant on XH Agents.
 You monitor DEX data (DexScreener-style). Current config: Pair={pair}, Network={net}, Strategy={strat}, Size=${size}USDT, SL={sl}%, TP={tp}%.
+RULES: Reply DIRECTLY to the user. Do NOT show your reasoning, planning, or internal thoughts. Do NOT count words out loud. Just give the answer.
 Respond concisely (under 120 words), professional trading language, mix English/Bahasa Indonesia if fitting.
 Give actionable insights: entry/exit, risk, liquidity, rug signals. Use 🟢BUY 🔴SELL 🟡HOLD sparingly.
 DISCLAIMER: not financial advice."""
