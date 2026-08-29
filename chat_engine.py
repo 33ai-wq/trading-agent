@@ -40,7 +40,7 @@ def load_env():
 ENV = load_env()
 NVIDIA_API_KEY = ENV.get("NVIDIA_API_KEY", "")
 NIM_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
-NIM_MODEL = "mistralai/mistral-7b-instruct-v0.3"  # free NIM; activate in NGC console if 404
+NIM_MODEL = "nvidia/nemotron-3-ultra-550b-a55b"  # Nemotron 3 Ultra via NVIDIA NIM (verified working)
 
 def db():
     c = sqlite3.connect(DB)
