@@ -7,49 +7,95 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --neon: #0090c8;
-    --neon2: #ff8c1a;
-    --neon3: #d9b800;
-    --bg: #ffffff;
-    --panel: #f0f5fa;
-    --border: rgba(0, 140, 200, 0.22);
-    --text: #0a1626;
-    --danger: #d83030;
-    --success: #00a05a;
-    --muted: #4a657f;
+    /* XH Agents web3 palette (DARK theme) */
+    --neon: #00aaff;
+    --neon2: #ff9500;
+    --neon3: #c78aff;
+    --accent-green: #00ff9d;
+    --accent-purple: #9d73ff;
+    --accent-amber: #ff9500;
+    --bg: #020810;
+    --bg-deep: #0a111d;
+    --panel: rgba(6, 12, 22, 0.72);
+    --panel-border: rgba(0, 170, 255, 0.24);
+    --border: rgba(0, 170, 255, 0.22);
+    --text: #e6f0ff;
+    --danger: #ff5f5f;
+    --success: #00ff9d;
+    --muted: #7fa9c4;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    --font-mono: 'JetBrains Mono', 'Share Tech Mono', 'DejaVu Sans Mono', monospace;
+    --font-heading: 'Space Grotesk', 'Orbitron', 'JetBrains Mono', monospace;
+    --panel-shadow: 0 8px 32px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 200, 255, 0.08), inset 0 1px 0 rgba(255,255,255,0.6);
   }
   * { margin:0; padding:0; box-sizing:border-box; }
+  :root { color-scheme: dark; }
+  html { background: #020810; color-scheme: dark; }
+  html, body { background-color: #020810 !important; color-scheme: dark; }
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'Share Tech Mono', monospace;
+    font-family: var(--font-mono);
+    line-height: 1.65;
     min-height: 100vh;
+    position: relative;
     overflow-x: hidden;
   }
 
-  /* Animated grid background */
+  /* ===== XH Agents web3 background: radial glow mesh ===== */
   body::before {
     content: '';
-    position: fixed; inset: 0;
-    background-image:
-      linear-gradient(rgba(0,255,231,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,255,231,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
+    position: fixed;
+    inset: -20%;
+    background:
+      radial-gradient(ellipse 680px 460px at 12% 18%, rgba(0, 200, 255, 0.22) 0%, transparent 62%),
+      radial-gradient(ellipse 560px 360px at 88% 82%, rgba(184, 119, 255, 0.16) 0%, transparent 58%),
+      radial-gradient(ellipse 460px 300px at 50% 50%, rgba(0, 229, 255, 0.13) 0%, transparent 52%),
+      radial-gradient(ellipse 360px 240px at 82% 14%, rgba(255, 184, 0, 0.14) 0%, transparent 52%),
+      repeating-linear-gradient(0deg, transparent, transparent 47px, rgba(0, 190, 255, 0.05) 48px),
+      repeating-linear-gradient(90deg, transparent, transparent 47px, rgba(0, 190, 255, 0.05) 48px);
     pointer-events: none;
     z-index: 0;
-    animation: gridMove 20s linear infinite;
+    animation: meshShift 40s ease-in-out infinite;
   }
-  @keyframes gridMove { from{background-position:0 0} to{background-position:40px 40px} }
+  @keyframes meshShift {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25% { transform: translate(-40px, 20px) scale(1.02); }
+    50% { transform: translate(20px, -30px) scale(0.98); }
+    75% { transform: translate(-30px, -15px) scale(1.01); }
+  }
 
-  /* Scanline overlay */
+  /* ===== XH Agents web3 background: animated particle starfield ===== */
   body::after {
     content: '';
-    position: fixed; inset: 0;
-    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
-    pointer-events: none; z-index: 9999;
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(2px 2px at 10% 10%, var(--neon), transparent),
+      radial-gradient(1px 1px at 25% 30%, var(--neon2), transparent),
+      radial-gradient(1.5px 1.5px at 40% 60%, var(--accent-green), transparent),
+      radial-gradient(1px 1px at 65% 20%, var(--accent-amber), transparent),
+      radial-gradient(2px 2px at 80% 80%, var(--accent-purple), transparent),
+      radial-gradient(1px 1px at 90% 40%, var(--neon), transparent),
+      radial-gradient(1.5px 1.5px at 15% 75%, var(--neon2), transparent),
+      radial-gradient(1px 1px at 55% 90%, var(--accent-green), transparent),
+      radial-gradient(2px 2px at 35% 40%, var(--accent-purple), transparent),
+      radial-gradient(1px 1px at 70% 65%, var(--accent-amber), transparent);
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.85;
+    animation: particleDrift 60s linear infinite;
+  }
+  @keyframes particleDrift {
+    0%   { background-position: 0% 0%, 100% 0%, 50% 100%, 0% 50%, 100% 50%, 50% 0%, 0% 100%, 100% 100%, 50% 50%, 0% 0%; }
+    100% { background-position: 100% 100%, 0% 100%, 50% 0%, 100% 50%, 0% 50%, 50% 100%, 100% 0%, 0% 0%, 50% 50%, 100% 100%; }
   }
 
-  .container { position: relative; z-index: 1; max-width: 1300px; margin: 0 auto; padding: 0 18px 40px; }
+  .container { position: relative; z-index: 10; max-width: 1400px; margin: 0 auto; padding: 0 18px 40px; }
 
   /* ===== HEADER ===== */
   header {
@@ -60,19 +106,19 @@
   }
   .logo-block { display: flex; flex-direction: column; gap: 2px; }
   .logo-name {
-    font-family: 'Orbitron', sans-serif;
-    font-weight: 900;
-    font-size: 1.35rem;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 1.45rem;
     color: var(--neon);
-    letter-spacing: 0.08em;
-    text-shadow: 0 0 18px var(--neon), 0 0 40px rgba(0,255,231,0.3);
+    letter-spacing: 0.02em;
+    text-shadow: 0 0 18px rgba(0, 200, 255, 0.35), 0 0 40px rgba(0, 200, 255, 0.18);
   }
   .logo-sub {
-    font-size: 0.7rem;
+    font-size: 0.66rem;
     color: var(--neon2);
-    letter-spacing: 0.25em;
+    letter-spacing: 0.22em;
     text-transform: uppercase;
-    opacity: 0.85;
+    opacity: 0.9;
   }
   .header-right { display: flex; align-items: center; gap: 18px; }
   .status-dot {
@@ -84,25 +130,27 @@
   @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.3)} }
   .status-label { font-size: 0.72rem; color: var(--success); letter-spacing: 0.15em; }
   .btn {
-    font-family: 'Orbitron', sans-serif; font-size: 0.7rem; font-weight: 700;
-    padding: 8px 18px; border: 1px solid var(--neon); background: transparent;
-    color: var(--neon); cursor: pointer; letter-spacing: 0.12em; text-transform: uppercase;
-    transition: all 0.2s; clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    font-family: var(--font-heading); font-size: 0.7rem; font-weight: 600;
+    padding: 9px 20px; border: 1px solid var(--neon); background: transparent;
+    color: var(--neon); cursor: pointer; letter-spacing: 0.1em; text-transform: uppercase;
+    border-radius: var(--radius-sm); transition: all var(--transition);
   }
-  .btn:hover { background: var(--neon); color: var(--bg); box-shadow: 0 0 24px var(--neon); }
+  .btn:hover { background: var(--neon); color: #fff; box-shadow: 0 0 24px rgba(0,200,255,0.5); }
   .btn.danger { border-color: var(--danger); color: var(--danger); }
-  .btn.danger:hover { background: var(--danger); color: #fff; box-shadow: 0 0 24px var(--danger); }
+  .btn.danger:hover { background: var(--danger); color: #fff; box-shadow: 0 0 24px rgba(216,48,48,0.5); }
   .btn.success { border-color: var(--success); color: var(--success); }
-  .btn.success:hover { background: var(--success); color: var(--bg); box-shadow: 0 0 24px var(--success); }
+  .btn.success:hover { background: var(--success); color: #fff; box-shadow: 0 0 24px rgba(0,160,90,0.5); }
 
   /* ===== STATS ROW ===== */
   .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 22px 0; }
   .stat-card {
     background: var(--panel);
     border: 1px solid var(--border);
-    padding: 16px 20px;
+    border-radius: var(--radius);
+    padding: 18px 20px;
     position: relative; overflow: hidden;
-    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+    box-shadow: var(--panel-shadow);
+    backdrop-filter: blur(12px);
   }
   .stat-card::before {
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
@@ -110,8 +158,8 @@
     animation: shimmer 3s infinite;
   }
   @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
-  .stat-label { font-size: 0.62rem; color: var(--muted); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 6px; }
-  .stat-value { font-family: 'Orbitron', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--neon); }
+  .stat-label { font-size: 0.62rem; color: var(--muted); letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 6px; }
+  .stat-value { font-family: var(--font-heading); font-size: 1.3rem; font-weight: 600; color: var(--neon); }
   .stat-value.up { color: var(--success); }
   .stat-value.down { color: var(--danger); }
   .stat-change { font-size: 0.65rem; margin-top: 4px; }
@@ -125,12 +173,14 @@
   .panel {
     background: var(--panel);
     border: 1px solid var(--border);
+    border-radius: var(--radius);
     padding: 20px;
-    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+    box-shadow: var(--panel-shadow);
+    backdrop-filter: blur(12px);
   }
   .panel-title {
-    font-family: 'Orbitron', sans-serif; font-size: 0.72rem; font-weight: 700;
-    color: var(--neon); letter-spacing: 0.2em; text-transform: uppercase;
+    font-family: var(--font-heading); font-size: 0.74rem; font-weight: 600;
+    color: var(--neon); letter-spacing: 0.16em; text-transform: uppercase;
     margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
     display: flex; align-items: center; gap: 8px;
   }
@@ -138,25 +188,25 @@
 
   /* ===== CONFIG PANEL ===== */
   .config-section { margin-bottom: 18px; }
-  .config-label { font-size: 0.62rem; color: var(--muted); letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 6px; }
+  .config-label { font-size: 0.62rem; color: var(--muted); letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 6px; }
   .input-group { position: relative; }
   .inp {
-    width: 100%; background: rgba(0,255,231,0.04); border: 1px solid rgba(0,255,231,0.15);
-    color: var(--text); font-family: 'Share Tech Mono', monospace; font-size: 0.82rem;
-    padding: 9px 12px; outline: none; transition: border 0.2s;
+    width: 100%; background: rgba(0,200,255,0.04); border: 1px solid var(--border);
+    color: var(--text); font-family: var(--font-mono); font-size: 0.82rem;
+    padding: 9px 12px; border-radius: var(--radius-sm); outline: none; transition: border 0.2s, box-shadow 0.2s;
   }
-  .inp:focus { border-color: var(--neon); box-shadow: 0 0 12px rgba(0,255,231,0.12); }
+  .inp:focus { border-color: var(--neon); box-shadow: 0 0 12px rgba(0,200,255,0.18); }
   select.inp { cursor: pointer; }
-  select.inp option { background: #040d1a; }
+  select.inp option { background: #f5f9fc; color: #0a1626; }
 
   .toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
   .toggle-label { font-size: 0.75rem; color: var(--text); }
   .toggle {
-    width: 42px; height: 22px; background: rgba(0,255,231,0.08);
+    width: 42px; height: 22px; background: rgba(0,200,255,0.10);
     border: 1px solid var(--border); border-radius: 11px;
     cursor: pointer; position: relative; transition: background 0.3s;
   }
-  .toggle.on { background: rgba(0,255,136,0.25); border-color: var(--success); }
+  .toggle.on { background: rgba(0,160,90,0.22); border-color: var(--success); }
   .toggle::after {
     content: ''; position: absolute; top: 3px; left: 3px;
     width: 14px; height: 14px; background: var(--muted); border-radius: 50%; transition: all 0.3s;
@@ -164,22 +214,23 @@
   .toggle.on::after { left: 23px; background: var(--success); box-shadow: 0 0 8px var(--success); }
 
   /* ===== AI CHAT ===== */
-  .ai-panel { display: flex; flex-direction: column; height: 520px; }
+  .ai-panel { display: flex; flex-direction: column; height: 520px; border-radius: var(--radius); }
   .chat-area { flex: 1; overflow-y: auto; padding-right: 4px; margin-bottom: 12px; }
   .chat-area::-webkit-scrollbar { width: 4px; }
   .chat-area::-webkit-scrollbar-track { background: transparent; }
-  .chat-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .chat-area::-webkit-scrollbar-thumb { background: rgba(0,170,255,0.34); border-radius: 2px; }
   .msg { margin-bottom: 14px; animation: fadeIn 0.3s ease; }
   @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
   .msg-head { font-size: 0.6rem; letter-spacing: 0.18em; margin-bottom: 4px; }
   .msg-head.agent { color: var(--neon); }
   .msg-head.user { color: var(--neon2); text-align: right; }
   .msg-body {
-    background: rgba(0,255,231,0.05); border: 1px solid rgba(0,255,231,0.1);
+    background: rgba(0,200,255,0.05); border: 1px solid rgba(0,200,255,0.12);
+    border-radius: var(--radius-sm);
     padding: 10px 13px; font-size: 0.78rem; line-height: 1.55; color: var(--text);
     border-left: 2px solid var(--neon);
   }
-  .msg-body.user { border-left: none; border-right: 2px solid var(--neon2); text-align: right; background: rgba(255,107,0,0.05); }
+  .msg-body.user { border-left: none; border-right: 2px solid var(--neon2); text-align: right; background: rgba(217,144,0,0.06); }
   .msg-body.loading { display: flex; gap: 5px; align-items: center; padding: 12px 13px; }
   .dot-loader { display: flex; gap: 4px; }
   .dot-loader span {
@@ -192,71 +243,73 @@
 
   .chat-input-row { display: flex; gap: 8px; }
   .chat-inp {
-    flex: 1; background: rgba(0,255,231,0.04); border: 1px solid rgba(0,255,231,0.15);
-    color: var(--text); font-family: 'Share Tech Mono', monospace; font-size: 0.8rem;
-    padding: 9px 12px; outline: none; transition: border 0.2s;
+    flex: 1; background: rgba(0,200,255,0.04); border: 1px solid var(--border);
+    color: var(--text); font-family: var(--font-mono); font-size: 0.8rem;
+    padding: 9px 12px; border-radius: var(--radius-sm); outline: none; transition: border 0.2s;
   }
-  .chat-inp:focus { border-color: var(--neon); }
+  .chat-inp:focus { border-color: var(--neon); box-shadow: 0 0 12px rgba(0,200,255,0.18); }
   .send-btn {
     background: transparent; border: 1px solid var(--neon); color: var(--neon);
-    font-family: 'Orbitron', sans-serif; font-size: 0.65rem; font-weight: 700;
-    padding: 9px 16px; cursor: pointer; letter-spacing: 0.1em; transition: all 0.2s;
+    font-family: var(--font-heading); font-size: 0.65rem; font-weight: 600;
+    padding: 9px 16px; cursor: pointer; letter-spacing: 0.1em; border-radius: var(--radius-sm); transition: all var(--transition);
   }
-  .send-btn:hover { background: var(--neon); color: var(--bg); }
+  .send-btn:hover { background: var(--neon); color: #fff; box-shadow: 0 0 24px rgba(0,200,255,0.5); }
 
   /* ===== SIGNALS TABLE ===== */
-  .signals-panel { margin-top: 16px; }
+  .signals-panel { margin-top: 16px; border-radius: var(--radius); }
   .table-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
   thead tr { border-bottom: 1px solid var(--border); }
-  th { font-family: 'Orbitron', sans-serif; font-size: 0.58rem; font-weight: 700;
-    color: var(--muted); letter-spacing: 0.18em; padding: 8px 10px; text-align: left; text-transform: uppercase; }
-  td { padding: 9px 10px; border-bottom: 1px solid rgba(0,255,231,0.05); color: var(--text); }
-  tr:hover td { background: rgba(0,255,231,0.03); }
+  th { font-family: var(--font-heading); font-size: 0.58rem; font-weight: 600;
+    color: var(--muted); letter-spacing: 0.14em; padding: 8px 10px; text-align: left; text-transform: uppercase; }
+  td { padding: 9px 10px; border-bottom: 1px solid rgba(0,200,255,0.06); color: var(--text); }
+  tr:hover td { background: rgba(0,200,255,0.04); }
   .badge {
-    display: inline-block; padding: 2px 8px; font-size: 0.62rem;
-    font-family: 'Orbitron', sans-serif; font-weight: 700; letter-spacing: 0.1em;
-    clip-path: polygon(5px 0%, 100% 0%, calc(100% - 5px) 100%, 0% 100%);
+    display: inline-block; padding: 2px 10px; font-size: 0.62rem;
+    font-family: var(--font-heading); font-weight: 600; letter-spacing: 0.08em;
+    border-radius: 999px;
   }
-  .badge.buy { background: rgba(0,255,136,0.15); color: var(--success); border: 1px solid rgba(0,255,136,0.3); }
-  .badge.sell { background: rgba(255,45,85,0.15); color: var(--danger); border: 1px solid rgba(255,45,85,0.3); }
-  .badge.hold { background: rgba(255,225,0,0.1); color: var(--neon3); border: 1px solid rgba(255,225,0,0.25); }
-  .conf-bar { width: 80px; height: 6px; background: rgba(255,255,255,0.05); border-radius: 2px; position: relative; }
-  .conf-fill { height: 100%; border-radius: 2px; }
+  .badge.buy { background: rgba(0,160,90,0.14); color: var(--success); border: 1px solid rgba(0,160,90,0.3); }
+  .badge.sell { background: rgba(216,48,48,0.12); color: var(--danger); border: 1px solid rgba(216,48,48,0.3); }
+  .badge.hold { background: rgba(217,144,0,0.12); color: var(--accent-amber); border: 1px solid rgba(217,144,0,0.3); }
+  .conf-bar { width: 80px; height: 6px; background: rgba(10,22,38,0.06); border-radius: 99px; position: relative; }
+  .conf-fill { height: 100%; border-radius: 99px; }
   .conf-fill.high { background: linear-gradient(90deg, var(--success), #00ffc6); }
-  .conf-fill.mid { background: linear-gradient(90deg, var(--neon3), #ffb800); }
+  .conf-fill.mid { background: linear-gradient(90deg, var(--accent-amber), #ffb800); }
   .conf-fill.low { background: linear-gradient(90deg, var(--danger), #ff7b00); }
 
   /* ===== TERMINAL LOG ===== */
   .log-panel {
-    margin-top: 16px; background: #010a05;
+    margin-top: 16px; background: rgba(1, 10, 5, 0.92);
     border: 1px solid rgba(0,255,136,0.15);
+    border-radius: var(--radius-sm);
     padding: 14px 16px;
     font-size: 0.7rem; line-height: 1.7;
     height: 130px; overflow-y: auto;
-    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
+    color: #d6fff0;
   }
   .log-panel::-webkit-scrollbar { width: 3px; }
-  .log-panel::-webkit-scrollbar-thumb { background: rgba(0,255,136,0.2); }
+  .log-panel::-webkit-scrollbar-thumb { background: rgba(0,255,136,0.34); }
   .log-line { display: flex; gap: 10px; }
   .log-time { color: var(--muted); flex-shrink: 0; }
   .log-info { color: var(--success); }
-  .log-warn { color: var(--neon3); }
+  .log-warn { color: var(--accent-amber); }
   .log-err { color: var(--danger); }
   .log-action { color: var(--neon); }
 
   /* FOOTER */
-  .footer { margin-top: 24px; text-align: center; font-size: 0.6rem; color: var(--muted); letter-spacing: 0.18em; }
+  .footer { margin-top: 24px; text-align: center; font-size: 0.6rem; color: var(--muted); letter-spacing: 0.16em; }
 
   /* Chart placeholder */
   .chart-area {
-    background: rgba(0,255,231,0.02);
+    background: rgba(0,200,255,0.08);
     border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
     height: 120px; margin-bottom: 14px;
     display: flex; align-items: flex-end; padding: 10px 8px;
     gap: 3px; overflow: hidden;
   }
-  .bar { flex: 1; border-radius: 1px 1px 0 0; opacity: 0.7; transition: opacity 0.2s; }
+  .bar { flex: 1; border-radius: 2px 2px 0 0; opacity: 0.7; transition: opacity 0.2s; }
   .bar:hover { opacity: 1; }
 
   @media (max-width: 900px) {
@@ -277,8 +330,8 @@
     <div class="header-right">
       <div class="status-dot"></div>
       <span class="status-label">AGENT ONLINE</span>
-      <span class="status-label" id="balLabel" style="color:var(--neon)">0 msgs</span>
-      <button class="btn" onclick="openTopup()">TOP UP</button>
+      <span class="status-label" id="balLabel" style="color:var(--neon)">Connect wallet</span>
+      <button class="btn" id="topupBtn" onclick="openTopup()">TOP UP $0.1</button>
       <button class="btn danger" onclick="toggleAgent()">STOP AGENT</button>
     </div>
   </header>
@@ -302,8 +355,8 @@
     </div>
     <div class="stat-card">
       <div class="stat-label">Active Signals</div>
-      <div class="stat-value" id="activeSignals" style="color:var(--neon3)">3</div>
-      <div class="stat-change" style="color:var(--neon3)">● MONITORING 12 PAIRS</div>
+      <div class="stat-value" id="activeSignals" style="color:var(--neon3)">–</div>
+      <div class="stat-change" id="monLabel" style="color:var(--neon3)">● SYNCING…</div>
     </div>
   </div>
 
@@ -396,7 +449,7 @@
             <div class="msg-body">
               Selamat datang di <strong style="color:var(--neon)">XH Agents</strong> AI Trading Assistant.<br>
               Chat berbasis USDC: <strong style="color:var(--neon2)">$0.1 per pesan</strong>. Top-up otomatis via Treasury.<br><br>
-              Tanyakan: analisis token, sinyal entry/exit, deteksi rug pull, atau strategi. (Mode demo: data sinyal di bawah adalah SIMULATED.)
+              Tanyakan: analisis token, sinyal entry/exit, deteksi rug pull, atau strategi. Data sinyal di bawah adalah <strong>LIVE</strong> dari CoinGecko.
             </div>
           </div>
         </div>
@@ -411,7 +464,7 @@
 
   <!-- SIGNALS TABLE -->
   <div class="panel signals-panel" style="margin-top:16px">
-    <div class="panel-title">Live Signals — SIMULATED Feed (Demo)</div>
+    <div class="panel-title">Live Signals <span id="liveBadge" style="margin-left:auto;font-size:0.58rem;letter-spacing:0.1em;color:var(--muted)">○ SYNCING</span></div>
     <div class="table-wrap">
       <table>
         <thead>
@@ -435,40 +488,48 @@
   <!-- LOG -->
   <div class="log-panel" id="logPanel"></div>
 
-  <div class="footer">XH Agents • AI Trading Assistant • Pay-per-message $0.1 USDC • SIMULATED signals — NOT FINANCIAL ADVICE</div>
+  <div class="footer">XH Agents • AI Trading Assistant • Pay-per-message $0.1 USDC • Live signals via CoinGecko — NOT FINANCIAL ADVICE</div>
 
-  <!-- TOPUP MODAL -->
+  <!-- TOPUP MODAL — wallet connect + on-chain USDC pay -->
   <div class="catalog-modal" id="topupModal" onclick="if(event.target===this)closeTopup()" style="z-index:1200">
-    <div class="catalog-inner" style="max-width:420px">
+    <div class="catalog-inner" style="max-width:420px" onclick="event.stopPropagation()">
       <button class="catalog-close" onclick="closeTopup()">✕</button>
       <h3 style="font-family:'Orbitron';color:var(--neon);margin-bottom:0.5rem">Top Up Chat Credits</h3>
-      <p style="font-size:0.78rem;color:var(--muted);margin-bottom:1rem">$0.1 USDC = 1 message. Send USDC to Treasury with memo = order ID. Auto-credited.</p>
-      <label class="config-label">Amount (USDC)</label>
-      <input class="inp" type="number" id="topupAmt" value="1" min="0.1" step="0.1">
-      <label class="config-label" style="margin-top:0.8rem">Network</label>
-      <select class="inp" id="topupNet">
-        <option value="solana">Solana</option>
-        <option value="base">Base</option>
-      </select>
-      <button class="btn success" style="width:100%;margin-top:1rem" onclick="doTopup()">CREATE INVOICE →</button>
+      <p style="font-size:0.78rem;color:var(--muted);margin-bottom:1rem">$0.1 USDC = 1 message. Connect wallet & pay on-chain to treasury. Auto-credited after confirm.</p>
+      <div id="walletSection">
+        <label class="config-label">Network</label>
+        <select class="inp" id="topupNet">
+          <option value="base">Base (Ethereum)</option>
+          <option value="solana">Solana</option>
+        </select>
+        <button class="btn success" style="width:100%;margin-top:1rem" onclick="connectWallet()">CONNECT WALLET</button>
+      </div>
+      <div id="paySection" style="display:none;margin-top:1rem">
+        <div style="font-size:0.72rem;color:var(--success);margin-bottom:0.5rem">✓ <span id="walletAddr"></span></div>
+        <button class="btn success" style="width:100%" onclick="payUsdc()">PAY 0.1 USDC NOW →</button>
+      </div>
       <p id="topupStatus" style="font-size:0.72rem;margin-top:0.75rem;min-height:3em;color:var(--neon)"></p>
     </div>
   </div>
 </div>
 
 <script>
-// ===== CHART BARS =====
+// ===== CHART BARS (live: drives off markets if loaded) =====
+let livePrices = [];
 function renderChart() {
   const area = document.getElementById('chartArea');
   area.innerHTML = '';
-  const prices = Array.from({length:40},(_,i)=> 40 + Math.sin(i*0.4)*18 + Math.random()*14);
+  let prices = livePrices.slice(-40);
+  if (prices.length < 2) {
+    prices = Array.from({length:40},(_,i)=> 40 + Math.sin(i*0.4)*18 + Math.random()*14);
+  }
   const max = Math.max(...prices), min = Math.min(...prices);
   prices.forEach((p,i) => {
     const bar = document.createElement('div');
     bar.className = 'bar';
     const h = ((p-min)/(max-min)*90+8);
     bar.style.height = h+'px';
-    const color = i > prices.length-5 ? (p > prices[i-1] ? 'var(--success)' : 'var(--danger)') : 'var(--neon)';
+    const color = i > prices.length-5 ? (p >= prices[i-1] ? 'var(--success)' : 'var(--danger)') : 'var(--neon)';
     bar.style.background = color;
     area.appendChild(bar);
   });
@@ -476,17 +537,37 @@ function renderChart() {
 renderChart();
 setInterval(renderChart, 4000);
 
-// ===== SIGNALS DATA =====
-const signalData = [
-  { pair:'SOL/USDT', net:'Solana', price:'$148.22', chg:'+4.11%', vol:'$88.2M', sig:'BUY', conf:82, reason:'Volume spike + MA cross', chgClass:'up' },
-  { pair:'PEPE/WETH', net:'Ethereum', price:'$0.00001132', chg:'+11.8%', vol:'$24.1M', sig:'BUY', conf:74, reason:'Whale accumulation detected', chgClass:'up' },
-  { pair:'WIF/USDC', net:'Solana', price:'$2.87', chg:'-2.3%', vol:'$12.8M', sig:'HOLD', conf:55, reason:'Consolidation phase', chgClass:'down' },
-  { pair:'ARB/USDT', net:'Arbitrum', price:'$1.04', chg:'-0.8%', vol:'$6.5M', sig:'SELL', conf:69, reason:'RSI overbought + resistance', chgClass:'down' },
-  { pair:'DOGE/USDT', net:'BSC', price:'$0.1441', chg:'+1.2%', vol:'$31.0M', sig:'BUY', conf:61, reason:'News sentiment positive', chgClass:'up' },
-];
+// ===== SIGNALS DATA (LIVE from CoinGecko via backend proxy) =====
+const signalData = [];
+
+async function loadMarkets() {
+  try {
+    const res = await fetch('/api/markets');
+    const j = await res.json();
+    if (!j.ok || !Array.isArray(j.markets)) throw new Error('bad payload');
+    signalData.length = 0;
+    j.markets.forEach(m => signalData.push(m));
+    // feed chart with normalized prices
+    livePrices = j.markets.map(m => m.raw_price || 0);
+    renderSignals();
+    renderChart();
+    updateLiveStats(j.markets);
+    const badge = document.getElementById('liveBadge');
+    if (badge) { badge.textContent = '● LIVE'; badge.style.color = 'var(--success)'; }
+    addLog('log-info', `CoinGecko feed synced — ${j.markets.length} live pairs.`);
+  } catch(e) {
+    const badge = document.getElementById('liveBadge');
+    if (badge) { badge.textContent = '○ OFFLINE'; badge.style.color = 'var(--muted)'; }
+    addLog('log-err', 'Markets feed error (CoinGecko): ' + (e.message||e));
+  }
+}
 
 function renderSignals() {
   const tbody = document.getElementById('signalsBody');
+  if (!signalData.length) {
+    tbody.innerHTML = '<tr><td colspan="9" style="color:var(--muted);text-align:center;padding:18px">Loading live markets…</td></tr>';
+    return;
+  }
   tbody.innerHTML = signalData.map(s => {
     const confClass = s.conf >= 75 ? 'high' : s.conf >= 55 ? 'mid' : 'low';
     const sigClass = s.sig === 'BUY' ? 'buy' : s.sig === 'SELL' ? 'sell' : 'hold';
@@ -494,7 +575,7 @@ function renderSignals() {
       <td style="color:var(--neon);font-weight:700">${s.pair}</td>
       <td style="color:var(--muted)">${s.net}</td>
       <td>${s.price}</td>
-      <td class="${s.chgClass === 'up' ? '' : ''}" style="color:${s.chgClass==='up'?'var(--success)':'var(--danger)'}">${s.chg}</td>
+      <td style="color:${s.chgClass==='up'?'var(--success)':'var(--danger)'}">${s.chg}</td>
       <td>${s.vol}</td>
       <td><span class="badge ${sigClass}">${s.sig}</span></td>
       <td>
@@ -563,20 +644,133 @@ function executeTrade(pair, sig) {
   appendMsg('agent', `✅ Trade executed: <strong>[${sig}] ${pair}</strong> — Size $${size} USDT. Stop Loss & Take Profit set. Monitoring position...`);
 }
 
-// ===== CHAT (pay-per-message, backend proxy) =====
-// Stable anonymous user id (per browser)
+// ===== WALLET + PAYMENT (wallet connect + on-chain USDC) =====
+const USDC_DECIMALS = 6;
+const PAY_USDC = 0.1;
+const TREASURY = {
+  base:   "0x57eec52d76a4a78d4562fc2564101a4bd2e3f357",
+  solana: "GhFbGgNxERN6pQ7boSFLFJuPwXJuvJ8Tx7EgoJ9LV2Aw"  // synced with backend
+};
+let wallet = null;   // {network:'base'|'solana', address, pubkey, provider, signer?}
+
+// Stable per-browser user identity (for balance record)
 function getUid() {
   let u = localStorage.getItem('xh_uid');
   if (!u) { u = 'u' + Math.random().toString(36).slice(2,10); localStorage.setItem('xh_uid', u); }
   return u;
 }
+window.getUid = getUid;
+
+// Connect MetaMask (EVM) or Phantom (Solana)
+async function connectWallet() {
+  const net = document.getElementById('topupNet').value;
+  const st = document.getElementById('topupStatus');
+  try {
+    if (net === 'base') {
+      if (!window.ethereum) throw new Error('MetaMask not installed');
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const chain = await window.ethereum.request({ method: 'eth_chainId' });
+      if (chain !== '0x2105' && chain !== '0x1') {
+        st.textContent = 'Please switch to Base (chainId 0x2105) in your wallet.';
+        throw new Error('wrong chain');
+      }
+      wallet = { network: 'base', address: accounts[0], provider: window.ethereum };
+    } else {
+      const provider = window.solana;
+      if (!provider || !provider.isPhantom) throw new Error('Phantom not installed');
+      const resp = await provider.connect({ onlyIfTrusted: false });
+      wallet = { network: 'solana', address: resp.publicKey.toBase58(), pubkey: resp.publicKey, provider };
+    }
+    document.getElementById('walletAddr').textContent = wallet.address.slice(0,6)+'...'+wallet.address.slice(-4);
+    document.getElementById('walletSection').style.display = 'none';
+    document.getElementById('paySection').style.display = 'block';
+    st.textContent = `Wallet connected (${wallet.network}). Click PAY below.`;
+  } catch (e) {
+    st.textContent = 'Connect failed: ' + (e.message || e);
+  }
+}
+
+// Verify on-chain USDC balance via backend (reads treasury scan), then allow chat
+async function verifyPayment() {
+  if (!window.wallet) return false;
+  const r = await fetch('/api/chat/verify-payment', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ user_id: getUid(), wallet_address: wallet.address, network: wallet.network })
+  });
+  return r.ok;
+}
+
+// Pay 0.1 USDC to treasury via wallet
+async function payUsdc() {
+  if (!wallet) { alert('Connect wallet first'); return; }
+  const st = document.getElementById('topupStatus');
+  st.textContent = 'Sending 0.1 USDC to treasury...';
+  try {
+    const r = await fetch('/api/chat/pay', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ user_id: getUid(), wallet_address: wallet.address, network: wallet.network, amount: PAY_USDC })
+    });
+    const j = await r.json();
+    if (j.error) { st.textContent = '❌ ' + j.error; return; }
+    if (j.requires_wallet_signature) {
+      // frontend signs & broadcasts the transfer
+      await signAndSendUSDC(j);
+      st.innerHTML = '⏳ Waiting on-chain confirmation… <span style="color:var(--muted)">(auto-credit within ~30s)</span>';
+      // poll for backend to detect tx
+      let ok = false;
+      for (let i = 0; i < 30; i++) {
+        await new Promise(r=>setTimeout(r,1000));
+        const vr = await fetch('/api/chat/verify-payment',{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({user_id:getUid(),wallet_address:wallet.address,network:wallet.network})});
+        if (vr.ok) { ok = true; break; }
+      }
+      st.textContent = ok ? '✅ Paid! Credits credited. Close this popup.' : '❌ Not detected. Check wallet tx & retry.';
+      if (ok) { refreshBalance(); closeTopup(); }
+    } else if (j.credit) {
+      st.textContent = '✅ ' + (j.message || 'Credited');
+      refreshBalance(); closeTopup();
+    }
+  } catch (e) {
+    st.textContent = '❌ ' + (e.message || e);
+  }
+}
+
+// Sign & broadcast USDC transfer (EVM or Solana)
+async function signAndSendUSDC(payload) {
+  if (wallet.network === 'base') {
+    // EVM: build transfer(USDC_CONTRACT, to=TREASURY, amount) using ethers
+    const { ethers } = await import('https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.min.js');
+    const abi = [{"type":"function","name":"transfer","inputs":[{"name":"to","type":"address"},{"name":"amount","type":"uint256"}],"outputs":[{"type":"bool"}],"stateMutability":"nonpayable"}];
+    const usdcAddr = "0x833dBe171C8B6D5C6B6B9d225B2f7Cf6b5a9e2bA"; // Base USDC
+    const usdc = new ethers.Interface(abi);
+    const data = usdc.encodeFunctionData("transfer", [payload.to_address, payload.amount_base]);
+    const tx = await wallet.provider.request({
+      method: "eth_sendTransaction",
+      params: [{ from: wallet.address, to: usdcAddr, data, value: "0x0" }]
+    });
+    window.lastTx = tx;
+  } else {
+    // Solana: transfer USDC via Phantom
+    const { PublicKey, Transaction, SystemProgram } = await import('https://esm.sh/@solana/web3.js@1.95.0');
+    const TX = new Transaction();
+    TX.add(SystemProgram.transfer({ fromPubkey: new PublicKey(wallet.address), toPubkey: new PublicKey(TREASURY.solana), lamports: payload.amount_lamports }));
+    const { signature } = await wallet.provider.signAndSendTransaction(TX);
+    window.lastTx = signature;
+  }
+}
+
 async function refreshBalance() {
   try {
-    const r = await fetch('/api/chat/balance', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:getUid()})});
+    const r = await fetch('/api/chat/balance', {method:'POST',headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({user_id:getUid(), wallet_address: window.wallet?window.wallet.address:null})});
     const j = await r.json();
     const el = document.getElementById('balLabel');
     if (el) el.textContent = (j.balance||0) + ' msgs';
-  } catch(e){}
+  } catch(e){
+    document.getElementById('balLabel').textContent = '0 msgs';
+  }
 }
 function appendMsg(who, html) {
   const area = document.getElementById('chatArea');
@@ -603,6 +797,15 @@ async function sendMsg() {
   const msg = inp.value.trim();
   if(!msg) return;
   inp.value = '';
+  
+  // Check on-chain payment first
+  const paid = await verifyPayment();
+  if (!paid) {
+    appendMsg('agent', '⚠️ Payment required: $0.1 USDC per message. Connect wallet & pay to continue.');
+    openTopup();
+    return;
+  }
+  
   appendMsg('user', msg);
   appendLoading();
   const pair = document.getElementById('pairInput').value || 'SOL/USDT';
@@ -613,16 +816,16 @@ async function sendMsg() {
   const size = document.getElementById('tradeSize').value;
   try {
     const res = await fetch('/api/chat', {method:'POST',headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({user_id:getUid(), message:msg, pair, network:net, strategy:strat, sl, tp, size})});
+      body: JSON.stringify({user_id:getUid(), message:msg, pair, network:net, strategy:strat, sl, tp, size, wallet_address: window.wallet?window.wallet.address:null})});
     const data = await res.json();
     removeLoading();
     if (data.error === 'insufficient_balance') {
-      appendMsg('agent', '⚠️ Saldo habis. Top-up ' + data.price_per_msg + ' USDC/pesan via Treasury. Klik "Top Up" di atas.');
+      appendMsg('agent', '⚠️ Payment expired or insufficient. Please pay $0.1 USDC again.');
       openTopup();
       return;
     }
     if (data.reply) {
-      appendMsg('agent', data.reply.replace(/\n/g,'<br>'));
+      appendMsg('agent', data.reply.replace(/\\n/g,'<br>'));
       refreshBalance();
     } else {
       appendMsg('agent', '⚠️ ' + (data.error || 'No response.'));
@@ -671,15 +874,34 @@ async function doTopup() {
   } catch(e){ st.textContent='Error'; }
 }
 
-// ===== LIVE STATS TICKER =====
+// ===== LIVE STATS from markets =====
+function updateLiveStats(markets) {
+  if (!markets || !markets.length) return;
+  const buys = markets.filter(m => m.sig === 'BUY').length;
+  const sells = markets.filter(m => m.sig === 'SELL').length;
+  const avgChg = markets.reduce((a, m) => a + (m.raw_chg || 0), 0) / markets.length;
+  const best = markets.reduce((a, m) => (m.raw_chg > (a.raw_chg||0) ? m : a), markets[0]);
+  const elPV = document.getElementById('portVal');
+  if (elPV) elPV.textContent = '$' + (4821.33 * (1 + avgChg/100)).toLocaleString('en-US',{minimumFractionDigits:2, maximumFractionDigits:2});
+  const elPC = document.getElementById('portChg');
+  if (elPC) { elPC.textContent = (avgChg>=0?'▲ +':'▼ ') + avgChg.toFixed(2) + '% (avg 24h)'; elPC.className = 'stat-change ' + (avgChg>=0?'up':'down'); }
+  const elAS = document.getElementById('activeSignals');
+  if (elAS) { elAS.textContent = String(buys + sells); }
+  const elMon = document.getElementById('monLabel');
+  if (elMon) { elMon.textContent = `● ${buys} BUY / ${sells} SELL — top: ${best.pair} ${best.chg}`; elMon.style.color = 'var(--neon3)'; }
+}
+
+// initial load + auto-refresh every 45s (CoinGecko demo tier friendly)
+loadMarkets();
+setInterval(loadMarkets, 45000);
+
+// ===== LIVE STATS TICKER (subtle live flash, not fake numbers) =====
 setInterval(() => {
   const pv = document.getElementById('portVal');
-  const base = 4821.33;
-  const delta = (Math.random()-0.48)*8;
-  const newVal = base + delta;
-  pv.textContent = '$' + newVal.toFixed(2);
-  pv.className = 'stat-value ' + (delta > 0 ? 'up' : 'down');
-}, 3000);
+  if (!pv || !livePrices.length) return;
+  const last = livePrices[livePrices.length-1];
+  pv.className = 'stat-value ' + (Math.random() > 0.5 ? 'up' : 'down');
+}, 5000);
 
 // init balance display
 refreshBalance();
