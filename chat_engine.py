@@ -69,6 +69,156 @@ except Exception as e:  # noqa: BLE001
 X402_PRICE_ATOMIC = int(MSG_PRICE_USDC * 1_000_000)  # 0.1 USDC
 X402_CHAIN = 8453  # Base mainnet
 
+# ── Standard x402 (spec-compliant) gate ────────────────────────────────────────
+# The paid route previously required a hand-built "X-Payment: tx_hash=...,nonce=..."
+# header. Automated x402 clients, the x402scan probe and Coinbase's own validator
+# cannot produce that, so the route also answers the standard envelope
+# (x402Version 2 + accepts[] + payment-required header) through the official SDK,
+# settled with the CDP facilitator (the only one serving Base mainnet, and the only
+# one that feeds Coinbase Bazaar discovery). The wallet top-up flow is untouched.
+X402_STD_ENABLED = os.environ.get("X402_STANDARD", "1") != "0"
+X402_STD_URL = os.environ.get("X402_FACILITATOR_URL", "https://api.cdp.coinbase.com/platform/v2/x402")
+CDP_HOST = "api.cdp.coinbase.com"
+CDP_BASE_PATH = "/platform/v2/x402"
+CDP_ENV_FILE = "/home/ubuntu/prpo_ai/cdp/.env.cdp"
+
+
+def _cdp_credentials():
+    creds = {}
+    try:
+        with open(CDP_ENV_FILE, "r", encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    k, v = line.split("=", 1)
+                    creds[k.strip()] = v.strip().strip('"').strip("'")
+    except OSError as e:
+        print(f"[chat] WARNING: cannot read CDP credentials ({e})", flush=True)
+    return creds
+
+
+def _cdp_create_headers():
+    """Per-operation CDP facilitator auth headers (JWTs are scoped per method+path)."""
+    from cdp.auth import GetAuthHeadersOptions, get_auth_headers
+    creds = _cdp_credentials()
+    kid = creds.get("CDP_API_KEY_ID") or os.environ.get("CDP_API_KEY_ID", "")
+    ksec = creds.get("CDP_API_KEY_PRIVATE_KEY") or os.environ.get("CDP_API_KEY_PRIVATE_KEY", "")
+
+    def one(method, path):
+        return get_auth_headers(GetAuthHeadersOptions(
+            api_key_id=kid, api_key_secret=ksec,
+            request_method=method, request_host=CDP_HOST, request_path=path)) or {}
+
+    return {
+        "supported": one("GET", CDP_BASE_PATH + "/supported"),
+        "verify": one("POST", CDP_BASE_PATH + "/verify"),
+        "settle": one("POST", CDP_BASE_PATH + "/settle"),
+        "bazaar": one("GET", CDP_BASE_PATH + "/discovery/resources"),
+    }
+
+
+def _balance_of(uid):
+    try:
+        c = db()
+        row = c.execute("SELECT balance FROM users WHERE user_id=?", (uid,)).fetchone()
+        c.close()
+        return row[0] if row else 0
+    except Exception:
+        return 0
+
+
+class _X402HTTPAdapter:
+    """Implements the x402 SDK's HTTPAdapter over the stdlib request handler."""
+
+    def __init__(self, handler):
+        self._h = handler
+
+    def get_header(self, name):
+        return self._h.headers.get(name)
+
+    def get_method(self):
+        return self._h.command
+
+    def get_path(self):
+        return urlparse(self._h.path).path
+
+    def get_url(self):
+        host = self._h.headers.get("X-Forwarded-Host") or self._h.headers.get("Host") or "xhagents.xyz"
+        proto = self._h.headers.get("X-Forwarded-Proto") or "https"
+        return f"{proto}://{host}{self.get_path()}"
+
+    def get_accept_header(self):
+        return self._h.headers.get("Accept") or "*/*"
+
+    def get_user_agent(self):
+        return self._h.headers.get("User-Agent") or ""
+
+    def get_query_params(self):
+        return parse_qs(urlparse(self._h.path).query) or None
+
+    def get_query_param(self, name):
+        v = parse_qs(urlparse(self._h.path).query).get(name)
+        return v[0] if v else None
+
+
+def _chat_discovery():
+    """Bazaar discovery metadata for POST /api/chat.
+
+    declare_discovery_extension() leaves info.input.method to be enriched by the
+    bazaar resource-server extension; that enrichment only happens on the FastAPI
+    middleware path, so on this raw HTTP server the method is set explicitly
+    (otherwise CDP validation reports "Missing info.input.method").
+    """
+    from x402.extensions.bazaar import OutputConfig, declare_discovery_extension
+    ext = declare_discovery_extension(
+        input={"message": "one sentence on BTC right now"},
+        input_schema={"type": "object", "properties": {"message": {"type": "string"}},
+                      "required": ["message"]},
+        body_type="json",
+        output=OutputConfig(example={"reply": "BTC/USDT is trading near $...; momentum looks mildly bullish.",
+                                     "balance": 0, "charged": True}),
+    )
+    try:
+        ext["bazaar"]["info"]["input"]["method"] = "POST"
+    except Exception:
+        pass
+    return ext
+
+
+X402_STD = None
+if X402_STD_ENABLED:
+    try:
+        from x402 import x402ResourceServerSync
+        from x402.extensions.bazaar import OutputConfig, declare_discovery_extension
+        from x402.http import (CreateHeadersAuthProvider, FacilitatorConfig, HTTPFacilitatorClientSync,
+                               HTTPRequestContext, x402HTTPResourceServerSync)
+        from x402.mechanisms.evm.exact import register_exact_evm_server
+
+        _fac = HTTPFacilitatorClientSync(FacilitatorConfig(
+            url=X402_STD_URL, auth_provider=CreateHeadersAuthProvider(_cdp_create_headers)))
+        _rsrv = x402ResourceServerSync(_fac)
+        register_exact_evm_server(_rsrv, ["eip155:8453"])
+        X402_STD = x402HTTPResourceServerSync(_rsrv, {
+            "POST /api/chat": {
+                "accepts": {"scheme": "exact", "payTo": TREASURY["base"],
+                            "price": f"${MSG_PRICE_USDC}", "network": "eip155:8453"},
+                "resource": "https://xhagents.xyz/api/chat",
+                "description": "Ask the XH Agents AI Trading Assistant a market question",
+                "mime_type": "application/json",
+                "service_name": "XH Agents AI Trading Assistant",
+                "tags": ["ai", "trading", "crypto", "market-data"],
+                "extensions": _chat_discovery(),
+            }
+        })
+        # Fetch the facilitator's supported schemes/networks now: without this the
+        # gate raises "Server not initialized" on every request.
+        X402_STD.initialize()
+        print(f"[chat] standard x402 ON | facilitator={X402_STD_URL} | POST /api/chat ${MSG_PRICE_USDC} -> {TREASURY['base']}", flush=True)
+    except Exception as _e:
+        X402_STD = None
+        print(f"[chat] WARNING: standard x402 setup failed ({_e}); legacy flow only", flush=True)
+
+
 
 def parse_x402_payment_header(value: str) -> dict:
     parts = {}
@@ -315,16 +465,33 @@ def scan_topups():
 
 class H(BaseHTTPRequestHandler):
     protocol_version="HTTP/1.1"
-    def _j(self,obj,code=200):
+    def _j(self,obj,code=200,extra_headers=None):
         body=json.dumps(obj).encode()
         self.send_response(code)
         self.send_header("Content-Type","application/json")
+        for _k,_v in (extra_headers or {}).items():
+            self.send_header(_k,_v)
         self.send_header("Access-Control-Allow-Origin","*")
         self.send_header("Access-Control-Allow-Methods","GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers","Content-Type")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
+    def _send_instructions(self, instr):
+        """Send an HTTPResponseInstructions from the x402 SDK (status + headers + body)."""
+        body = instr.body
+        if isinstance(body, str):
+            body = body.encode()
+        body = body or b""
+        self.send_response(instr.status)
+        for k, v in (instr.headers or {}).items():
+            self.send_header(k, v)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        if body:
+            self.wfile.write(body)
+
     def do_OPTIONS(self):
         self.send_response(204)
         self.send_header("Access-Control-Allow-Origin","*")
@@ -462,13 +629,39 @@ class H(BaseHTTPRequestHandler):
     def _chat(self,d):
         uid=d.get("user_id","anon")
         msg=(d.get("message") or "").strip()
+        # ── standard x402 gate: runs BEFORE body validation so an unpaid request gets
+        #    the spec-compliant 402 challenge instead of a validation error ──
+        std_verified = None
+        std_ctx = None
+        if X402_STD is not None:
+            std_ctx = _X402HTTPAdapter(self)
+            _ctx = HTTPRequestContext(adapter=std_ctx, path=std_ctx.get_path(), method=std_ctx.get_method(),
+                                      payment_header=self.headers.get("x-payment") or self.headers.get("payment-signature"))
+            try:
+                _res = X402_STD.process_http_request(_ctx)
+            except Exception as _e:
+                print("[chat] x402 gate error:", _e, flush=True)
+                _res = None
+            if _res is not None:
+                if _res.type == "payment-error":
+                    # No usable standard payment. Callers that identify a user keep the
+                    # human wallet flow below (including its friendly message); everything
+                    # else — agents, probes, validators — gets the standard challenge.
+                    if not d.get("user_id"):
+                        return self._send_instructions(_res.response)
+                elif _res.type == "payment-verified":
+                    std_verified = _res
         if not msg: return self._j({"error":"message required"},400)
         # ── x402 pay-per-message gate ──────────────────────────────────
         # If the client sends an X-Payment header, verify the USDC transfer
         # and serve the reply WITHOUT spending wallet balance (agent-to-agent).
         # Reads both official spelling and legacy b0x402 header.
         payment_hdr = self.headers.get("x-payment") or self.headers.get("payment-signature")
-        if payment_hdr:
+        # Only the LEGACY manual flow parses tx_hash/nonce out of this header. When the
+        # standard gate above already verified a spec-compliant payment, the header holds
+        # an x402 signature instead — parsing it as the legacy format rejected a perfectly
+        # valid paid request with "X-Payment requires tx_hash and nonce".
+        if payment_hdr and std_verified is None:
             parsed = parse_x402_payment_header(payment_hdr)
             tx_hash = parsed.get("tx_hash",""); nonce=parsed.get("nonce","")
             if not tx_hash or not nonce:
@@ -505,7 +698,7 @@ class H(BaseHTTPRequestHandler):
                 # quick verify without blocking too long - use cached check, real verify happens via /verify-payment
                 # but also try fast path if balance zero
                 pass
-            if (not x402_paid) and bal <1:
+            if (not x402_paid) and (std_verified is None) and bal <1:
                 c.close()
                 return self._j({"error":"insufficient_balance","balance":bal,"message":"Pay $0.1 per message. Connect wallet & pay via /api/chat/pay (USDC to treasury).","topup_url":"/trading/?topup=1"})
             # NOTE: the credit is NOT spent here. It is spent only after the model
@@ -556,8 +749,16 @@ DISCLAIMER: not financial advice."""
             final_bal=float(row[0]) if row else 0.0
         finally:
             c.close()
-        return self._j({"reply":reply,"balance":final_bal,"charged":bool(ok and not x402_paid),
-                        "price_per_msg":MSG_PRICE_USDC})
+        _extra = None
+        if std_verified is not None and X402_STD is not None:
+            try:
+                _st = X402_STD.process_settlement(std_verified.payment_payload, std_verified.payment_requirements,
+                                                 _ctx, declared_extensions=getattr(std_verified, "declared_extensions", None))
+                _extra = getattr(_st, "headers", None)
+            except Exception as _e:
+                print("[chat] x402 settle error:", _e, flush=True)
+        return self._j({"reply":reply,"balance":final_bal,"charged":bool(ok and not x402_paid and std_verified is None),
+                        "price_per_msg":MSG_PRICE_USDC}, 200, _extra)
     def log_message(self,*a): pass
 
 if __name__=="__main__":
