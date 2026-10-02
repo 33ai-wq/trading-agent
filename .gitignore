@@ -6,3 +6,10 @@
 
 # vercel
 .vercel
+
+# runtime + local artefacts (never publish)
+node_modules/
+__pycache__/
+*.bak.*
+backup_*/
+chat.db

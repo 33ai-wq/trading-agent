@@ -32,7 +32,7 @@
   }
   * { margin:0; padding:0; box-sizing:border-box; }
   :root { color-scheme: dark; }
-  html { background: #020810; color-scheme: dark; }
+  html { background: #020810; color-scheme: dark; overflow-x: hidden; overflow-y: auto; scroll-behavior: smooth; }
   html, body { background-color: #020810 !important; color-scheme: dark; }
   body {
     background: var(--bg);
@@ -316,6 +316,21 @@
     .main-grid { grid-template-columns: 1fr; }
     .stats-row { grid-template-columns: repeat(2, 1fr); }
   }
+
+  /* ===== MODALS: scroll fix + multi-modal wallet (Ataraxia style) ===== */
+  .catalog-modal { position: fixed; inset: 0; background: rgba(2,8,16,0.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 1200; opacity: 0; pointer-events: none; transition: opacity 0.22s ease; overflow-y: auto; }
+  .catalog-modal.open { opacity: 1; pointer-events: auto; }
+  .catalog-inner { background: rgba(6,12,22,0.96); border: 1px solid var(--border); border-radius: 20px; padding: 22px; width: 100%; max-width: 520px; box-shadow: 0 20px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(0,170,255,0.12); position: relative; max-height: 90vh; overflow-y: auto; }
+  .catalog-inner::-webkit-scrollbar { width: 4px; } .catalog-inner::-webkit-scrollbar-thumb { background: rgba(0,170,255,0.3); border-radius: 2px; }
+  .catalog-close { position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border); background: rgba(0,200,255,0.06); color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; }
+  .catalog-close:hover { border-color: var(--neon); color: var(--neon); background: rgba(0,200,255,0.12); }
+  .wallet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .wallet-opt { display: flex; align-items: center; gap: 10px; padding: 11px 12px; background: rgba(0,200,255,0.04); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; transition: all 0.18s; color: var(--text); font-size: 0.78rem; font-weight: 600; }
+  .wallet-opt:hover { border-color: var(--neon); background: rgba(0,200,255,0.09); transform: translateY(1px); box-shadow: 0 8px 24px rgba(0,170,255,0.15); }
+  .wallet-opt .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); box-shadow: 0 0 8px var(--success); margin-left: auto; }
+  .wallet-opt .ic { font-size: 1.05rem; width: 22px; text-align: center; }
+  .divider-or { display: flex; align-items: center; gap: 12px; margin: 14px 0; color: var(--muted); font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase; }
+  .divider-or::before, .divider-or::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 </style>
 </head>
 <body>
@@ -331,7 +346,8 @@
       <div class="status-dot"></div>
       <span class="status-label">AGENT ONLINE</span>
       <span class="status-label" id="balLabel" style="color:var(--neon)">Connect wallet</span>
-      <button class="btn" id="topupBtn" onclick="openTopup()">TOP UP $0.1</button>
+      <button class="btn success" id="headerWalletBtn" onclick="openWalletModal()">🔗 CONNECT WALLET</button>
+      <button class="btn" id="topupBtn" onclick="openTopup()" style="display:none">TOP UP $0.1</button>
       <button class="btn danger" onclick="toggleAgent()">STOP AGENT</button>
     </div>
   </header>
@@ -495,20 +511,41 @@
     <div class="catalog-inner" style="max-width:420px" onclick="event.stopPropagation()">
       <button class="catalog-close" onclick="closeTopup()">✕</button>
       <h3 style="font-family:'Orbitron';color:var(--neon);margin-bottom:0.5rem">Top Up Chat Credits</h3>
-      <p style="font-size:0.78rem;color:var(--muted);margin-bottom:1rem">$0.1 USDC = 1 message. Connect wallet & pay on-chain to treasury. Auto-credited after confirm.</p>
-      <div id="walletSection">
-        <label class="config-label">Network</label>
-        <select class="inp" id="topupNet">
-          <option value="base">Base (Ethereum)</option>
-          <option value="solana">Solana</option>
-        </select>
-        <button class="btn success" style="width:100%;margin-top:1rem" onclick="connectWallet()">CONNECT WALLET</button>
-      </div>
+      <p style="font-size:0.78rem;color:var(--muted);margin-bottom:1rem">$0.1 USDC = 1 message. Pay on-chain to treasury. Auto-credited after confirm.</p>
       <div id="paySection" style="display:none;margin-top:1rem">
-        <div style="font-size:0.72rem;color:var(--success);margin-bottom:0.5rem">✓ <span id="walletAddr"></span></div>
+        <div style="font-size:0.72rem;color:var(--success);margin-bottom:0.5rem">✓ <span id="walletAddr"></span> <span style="color:var(--muted)" id="walletNet"></span></div>
+        <div style="font-size:0.62rem;color:var(--muted);margin-bottom:0.5rem">Treasury: <span style="color:var(--neon);word-break:break-all" id="treasuryAddr"></span></div>
         <button class="btn success" style="width:100%" onclick="payUsdc()">PAY 0.1 USDC NOW →</button>
       </div>
+      <div id="walletPrompt" style="font-size:0.72rem;color:var(--muted);text-align:center;padding:8px 0">Connect wallet dulu via tombol di header atas ☝️</div>
       <p id="topupStatus" style="font-size:0.72rem;margin-top:0.75rem;min-height:3em;color:var(--neon)"></p>
+    </div>
+  </div>
+
+  <!-- WALLET MULTI-MODAL (header, Ataraxia style) -->
+  <div class="catalog-modal" id="walletModal" onclick="if(event.target===this)closeWalletModal()" style="z-index:1300">
+    <div class="catalog-inner" onclick="event.stopPropagation()">
+      <button class="catalog-close" onclick="closeWalletModal()">✕</button>
+      <h3 style="font-family:'Orbitron';color:var(--neon);margin-bottom:0.25rem">🔐 Connect Wallet</h3>
+      <p style="font-size:0.72rem;color:var(--muted);margin-bottom:0.5rem">Pilih wallet EVM (Base) atau Solana. 8 opsi, detect otomatis.</p>
+      <p style="font-size:0.6rem;color:var(--muted);margin-bottom:1rem">Reown Project: <span style="color:var(--neon)">886f8719c01b034b65dad40b625434a8</span> • Secured • No seed phrase</p>
+      <div style="font-size:0.62rem;color:var(--neon2);letter-spacing:0.16em;text-transform:uppercase;margin-bottom:6px">EVM — Base</div>
+      <div class="wallet-grid">
+        <div class="wallet-opt" onclick="connectWalletMulti('metamask')"><span class="ic">🦊</span> MetaMask <span class="dot" id="dot-metamask" style="display:none"></span></div>
+        <div class="wallet-opt" onclick="connectWalletMulti('coinbase')"><span class="ic">🔵</span> Coinbase <span class="dot" id="dot-coinbase" style="display:none"></span></div>
+        <div class="wallet-opt" onclick="connectWalletMulti('walletconnect')"><span class="ic">🔗</span> WalletConnect</div>
+        <div class="wallet-opt" onclick="connectWalletMulti('rabby')"><span class="ic">🐰</span> Rabby / Brave</div>
+      </div>
+      <div class="divider-or">or</div>
+      <div style="font-size:0.62rem;color:var(--accent-purple);letter-spacing:0.16em;text-transform:uppercase;margin-bottom:6px">Solana</div>
+      <div class="wallet-grid">
+        <div class="wallet-opt" onclick="connectWalletMulti('phantom')"><span class="ic">👻</span> Phantom <span class="dot" id="dot-phantom" style="display:none"></span></div>
+        <div class="wallet-opt" onclick="connectWalletMulti('solflare')"><span class="ic">🔥</span> Solflare</div>
+        <div class="wallet-opt" onclick="connectWalletMulti('backpack')"><span class="ic">🎒</span> Backpack</div>
+        <div class="wallet-opt" onclick="connectWalletMulti('glow')"><span class="ic">✨</span> Glow</div>
+      </div>
+      <p id="walletModalStatus" style="font-size:0.72rem;color:var(--neon);margin-top:1rem;min-height:1.2em"></p>
+      <p style="font-size:0.6rem;color:var(--muted);text-align:center;margin-top:0.5rem">By connecting, you agree to pay $0.1 USDC per AI message. Treasury: <span style="color:var(--muted)">0x57ee…F357 / GhFb…LV2Aw</span></p>
     </div>
   </div>
 </div>
@@ -644,16 +681,15 @@ function executeTrade(pair, sig) {
   appendMsg('agent', `✅ Trade executed: <strong>[${sig}] ${pair}</strong> — Size $${size} USDT. Stop Loss & Take Profit set. Monitoring position...`);
 }
 
-// ===== WALLET + PAYMENT (wallet connect + on-chain USDC) =====
+// ===== WALLET + PAYMENT (multi-modal: Ataraxia style, header) =====
 const USDC_DECIMALS = 6;
 const PAY_USDC = 0.1;
 const TREASURY = {
   base:   "0x57eec52d76a4a78d4562fc2564101a4bd2e3f357",
-  solana: "GhFbGgNxERN6pQ7boSFLFJuPwXJuvJ8Tx7EgoJ9LV2Aw"  // synced with backend
+  solana: "GhFbGgNxERN6pQ7boSFLFJuPwXJuvJ8Tx7EgoJ9LV2Aw"
 };
-let wallet = null;   // {network:'base'|'solana', address, pubkey, provider, signer?}
+let wallet = null;   // {network:'base'|'solana', address, pubkey, provider}
 
-// Stable per-browser user identity (for balance record)
 function getUid() {
   let u = localStorage.getItem('xh_uid');
   if (!u) { u = 'u' + Math.random().toString(36).slice(2,10); localStorage.setItem('xh_uid', u); }
@@ -661,49 +697,111 @@ function getUid() {
 }
 window.getUid = getUid;
 
-// Connect MetaMask (EVM) or Phantom (Solana)
-async function connectWallet() {
-  const net = document.getElementById('topupNet').value;
-  const st = document.getElementById('topupStatus');
-  try {
-    if (net === 'base') {
-      if (!window.ethereum) throw new Error('MetaMask not installed');
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      const chain = await window.ethereum.request({ method: 'eth_chainId' });
-      if (chain !== '0x2105' && chain !== '0x1') {
-        st.textContent = 'Please switch to Base (chainId 0x2105) in your wallet.';
-        throw new Error('wrong chain');
-      }
-      wallet = { network: 'base', address: accounts[0], provider: window.ethereum };
-    } else {
-      const provider = window.solana;
-      if (!provider || !provider.isPhantom) throw new Error('Phantom not installed');
-      const resp = await provider.connect({ onlyIfTrusted: false });
-      wallet = { network: 'solana', address: resp.publicKey.toBase58(), pubkey: resp.publicKey, provider };
-    }
-    document.getElementById('walletAddr').textContent = wallet.address.slice(0,6)+'...'+wallet.address.slice(-4);
-    document.getElementById('walletSection').style.display = 'none';
+function updateHeaderWallet() {
+  const btn = document.getElementById('headerWalletBtn');
+  const balLabel = document.getElementById('balLabel');
+  const topBtn = document.getElementById('topupBtn');
+  if (wallet) {
+    const short = wallet.address.slice(0,6)+'...'+wallet.address.slice(-4);
+    btn.textContent = '✓ ' + short;
+    btn.style.borderColor = 'var(--success)'; btn.style.color = 'var(--success)';
+    balLabel.textContent = short + ' • ' + wallet.network;
+    balLabel.style.color = 'var(--success)';
+    topBtn.style.display = '';
+    // update topup modal fields
+    document.getElementById('walletAddr').textContent = short;
+    document.getElementById('walletNet').textContent = '('+wallet.network+')';
+    document.getElementById('treasuryAddr').textContent = TREASURY[wallet.network];
     document.getElementById('paySection').style.display = 'block';
-    st.textContent = `Wallet connected (${wallet.network}). Click PAY below.`;
-  } catch (e) {
-    st.textContent = 'Connect failed: ' + (e.message || e);
+    document.getElementById('walletPrompt').style.display = 'none';
+  } else {
+    btn.textContent = '🔗 CONNECT WALLET';
+    btn.style.borderColor = ''; btn.style.color = '';
+    balLabel.textContent = 'Connect wallet';
+    balLabel.style.color = 'var(--neon)';
+    topBtn.style.display = 'none';
+    document.getElementById('paySection').style.display = 'none';
+    document.getElementById('walletPrompt').style.display = 'block';
   }
 }
 
-// Verify on-chain USDC balance via backend (reads treasury scan), then allow chat
+function detectWallets() {
+  try {
+    if (window.ethereum) {
+      if (window.ethereum.isMetaMask) document.getElementById('dot-metamask').style.display='';
+      if (window.ethereum.isCoinbaseWallet) document.getElementById('dot-coinbase').style.display='';
+    }
+    if (window.solana && window.solana.isPhantom) document.getElementById('dot-phantom').style.display='';
+    if (window.solflare) document.getElementById('dot-phantom').style.display='';
+  } catch(e) {}
+}
+
+function openWalletModal() {
+  detectWallets();
+  document.getElementById('walletModal').classList.add('open');
+  document.body.style.overflow='hidden';
+  document.documentElement.style.overflow='hidden';
+}
+function closeWalletModal() {
+  document.getElementById('walletModal').classList.remove('open');
+  document.body.style.overflow='';
+  document.documentElement.style.overflow='';
+}
+async function connectWalletMulti(id) {
+  const st = document.getElementById('walletModalStatus');
+  st.textContent = 'Connecting ' + id + '...';
+  try {
+    if (['metamask','coinbase','walletconnect','rabby'].includes(id)) {
+      if (!window.ethereum) throw new Error('EVM wallet not found. Install MetaMask/Coinbase/Rabby atau pakai WalletConnect');
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      // optional chain check - warn but don't block
+      try {
+        const chain = await window.ethereum.request({ method: 'eth_chainId' });
+        if (chain !== '0x2105') {
+          addLog('log-warn','Wallet on chain '+chain+' — Base is 0x2105, tapi tetap lanjut');
+        }
+      } catch(e) {}
+      wallet = { network: 'base', address: accounts[0], provider: window.ethereum, id };
+    } else {
+      // Solana
+      let provider = window.solana;
+      if (id==='solflare' && window.solflare) provider = window.solflare;
+      else if (id==='backpack' && window.backpack) provider = window.backpack;
+      else if (id==='glow' && window.glow) provider = window.glow;
+      if (!provider || (!provider.isPhantom && id==='phantom' && !window.solflare)) {
+        // fallback to any solana provider
+        provider = provider || window.solana || window.phantom?.solana;
+      }
+      if (!provider) throw new Error('Solana wallet not found. Install Phantom/Solflare/Backpack');
+      const resp = await provider.connect({ onlyIfTrusted: false });
+      const pubkey = resp.publicKey || provider.publicKey;
+      wallet = { network: 'solana', address: pubkey.toBase58(), pubkey, provider, id };
+    }
+    updateHeaderWallet();
+    st.textContent = '✓ Connected ' + wallet.address.slice(0,6)+'...'+wallet.address.slice(-4) + ' ('+wallet.network+')';
+    refreshBalance();
+    setTimeout(()=>{ closeWalletModal(); }, 700);
+  } catch (e) {
+    st.textContent = '❌ ' + (e.message || e);
+  }
+}
+
+// Verify on-chain USDC balance via backend, then allow chat
 async function verifyPayment() {
-  if (!window.wallet) return false;
-  const r = await fetch('/api/chat/verify-payment', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ user_id: getUid(), wallet_address: wallet.address, network: wallet.network })
-  });
-  return r.ok;
+  if (!wallet) return false;
+  try {
+    const r = await fetch('/api/chat/verify-payment', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ user_id: getUid(), wallet_address: wallet.address, network: wallet.network })
+    });
+    return r.ok;
+  } catch(e) { return false; }
 }
 
 // Pay 0.1 USDC to treasury via wallet
 async function payUsdc() {
-  if (!wallet) { alert('Connect wallet first'); return; }
+  if (!wallet) { alert('Connect wallet di header atas dulu'); openWalletModal(); return; }
   const st = document.getElementById('topupStatus');
   st.textContent = 'Sending 0.1 USDC to treasury...';
   try {
@@ -715,10 +813,8 @@ async function payUsdc() {
     const j = await r.json();
     if (j.error) { st.textContent = '❌ ' + j.error; return; }
     if (j.requires_wallet_signature) {
-      // frontend signs & broadcasts the transfer
       await signAndSendUSDC(j);
-      st.innerHTML = '⏳ Waiting on-chain confirmation… <span style="color:var(--muted)">(auto-credit within ~30s)</span>';
-      // poll for backend to detect tx
+      st.innerHTML = '⏳ Waiting on-chain confirmation… <span style="color:var(--muted)">(auto-credit ~30s)</span>';
       let ok = false;
       for (let i = 0; i < 30; i++) {
         await new Promise(r=>setTimeout(r,1000));
@@ -764,12 +860,14 @@ async function signAndSendUSDC(payload) {
 async function refreshBalance() {
   try {
     const r = await fetch('/api/chat/balance', {method:'POST',headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({user_id:getUid(), wallet_address: window.wallet?window.wallet.address:null})});
+      body: JSON.stringify({user_id:getUid(), wallet_address: wallet?wallet.address:null})});
     const j = await r.json();
     const el = document.getElementById('balLabel');
-    if (el) el.textContent = (j.balance||0) + ' msgs';
+    if (wallet && el) el.textContent = (j.balance||0) + ' msgs • ' + wallet.address.slice(0,6)+'...'+wallet.address.slice(-4);
+    else if (el) el.textContent = (j.balance||0) + ' msgs';
   } catch(e){
-    document.getElementById('balLabel').textContent = '0 msgs';
+    if (wallet) document.getElementById('balLabel').textContent = '0 msgs • ' + wallet.address.slice(0,6)+'...';
+    else document.getElementById('balLabel').textContent = '0 msgs';
   }
 }
 function appendMsg(who, html) {
@@ -816,7 +914,7 @@ async function sendMsg() {
   const size = document.getElementById('tradeSize').value;
   try {
     const res = await fetch('/api/chat', {method:'POST',headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({user_id:getUid(), message:msg, pair, network:net, strategy:strat, sl, tp, size, wallet_address: window.wallet?window.wallet.address:null})});
+      body: JSON.stringify({user_id:getUid(), message:msg, pair, network:net, strategy:strat, sl, tp, size, wallet_address: wallet?wallet.address:null})});
     const data = await res.json();
     removeLoading();
     if (data.error === 'insufficient_balance') {
@@ -842,7 +940,7 @@ async function analyzeNow() {
   appendLoading();
   try {
     const res = await fetch('/api/chat', {method:'POST',headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({user_id:getUid(), message:`Analyze ${pair}. Strategy: ${strat}. Give BUY/SELL/HOLD signal now with entry, SL, TP, risk.`, pair, network:document.getElementById('networkSelect').value, strategy:strat, sl:document.getElementById('stopLoss').value, tp:document.getElementById('takeProfit').value, size:document.getElementById('tradeSize').value})});
+      body: JSON.stringify({user_id:getUid(), message:`Analyze ${pair}. Strategy: ${strat}. Give BUY/SELL/HOLD signal now with entry, SL, TP, risk.`, pair, network:document.getElementById('networkSelect').value, strategy:strat, sl:document.getElementById('stopLoss').value, tp:document.getElementById('takeProfit').value, size:document.getElementById('tradeSize').value, wallet_address: wallet?wallet.address:null})});
     const data = await res.json();
     removeLoading();
     if (data.reply) { appendMsg('agent', data.reply.replace(/\n/g,'<br>')); refreshBalance(); }
@@ -852,16 +950,19 @@ async function analyzeNow() {
 
 // ===== TOPUP MODAL =====
 function openTopup() {
+  if (!wallet) { openWalletModal(); return; }
   document.getElementById('topupModal').classList.add('open');
   document.body.style.overflow='hidden';
+  document.documentElement.style.overflow='hidden';
 }
 function closeTopup() {
   document.getElementById('topupModal').classList.remove('open');
   document.body.style.overflow='';
+  document.documentElement.style.overflow='';
 }
 async function doTopup() {
-  const amt = parseFloat(document.getElementById('topupAmt').value)||1;
-  const net = document.getElementById('topupNet').value;
+  const amt = parseFloat(document.getElementById('topupAmt')?.value)||1;
+  const net = document.getElementById('topupNet')?.value || (wallet?wallet.network:'base');
   const st = document.getElementById('topupStatus');
   st.textContent = 'Creating invoice...';
   try {
