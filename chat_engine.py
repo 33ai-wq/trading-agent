@@ -161,6 +161,20 @@ class _X402HTTPAdapter:
         return v[0] if v else None
 
 
+class _X402HTTPAdapterAsPost(_X402HTTPAdapter):
+    """Same adapter, but it reports the paid method.
+
+    Discovery crawlers probe GET/HEAD/PUT/DELETE/PATCH on a registered paid resource, and
+    the x402 route table below is keyed "POST /api/chat". A GET context therefore matches
+    nothing, so the route used to answer 404 - which a crawler reads as a broken resource.
+    Reporting POST makes the non-POST answer the SAME challenge POST gets, produced by the
+    same SDK call. No payment is verified and no chat handler runs on those verbs.
+    """
+
+    def get_method(self):
+        return "POST"
+
+
 def _chat_discovery():
     """Bazaar discovery metadata for POST /api/chat.
 
@@ -351,33 +365,45 @@ def nim_reply(system_prompt, user_msg, history):
             role = "assistant" if role else "user"      # never send an invalid role
         messages.append({"role": role, "content": h.get("content", "")})
     messages.append({"role": "user", "content": user_msg})
-    payload = {"model": NIM_MODEL, "messages": messages, "max_tokens": 500, "temperature": 0.7}
     retry_status = (429, 500, 502, 503, 504)
     last = ""
-    for attempt in range(3):
-        try:
-            r = requests.post(NIM_URL,
-                              headers={"Authorization": f"Bearer {NVIDIA_API_KEY}", "Content-Type": "application/json"},
-                              json=payload, timeout=30)
-        except requests.exceptions.Timeout:
-            last = "timeout"
-            time.sleep(0.8 * (attempt + 1))
-            continue
-        except Exception as e:  # noqa: BLE001
-            last = f"error: {e}"
-            time.sleep(0.8 * (attempt + 1))
-            continue
-        if r.status_code == 200:
+    # NIM_MODEL is a reasoning model: its thinking tokens are drawn from the SAME
+    # max_tokens budget. The old fixed 500-token budget let reasoning consume the whole
+    # budget and still answer HTTP 200 with an EMPTY content string, which the code then
+    # reported as a successful reply ("(empty reply)") - a paying buyer got no answer
+    # while the call still settled on-chain. Budget is now generous, and an empty answer
+    # is a FAILURE (ok=False), never a success.
+    for budget in (1600, 3200):
+        payload = {"model": NIM_MODEL, "messages": messages, "max_tokens": budget, "temperature": 0.7}
+        for attempt in range(3):
             try:
-                txt = r.json()["choices"][0]["message"]["content"]
-                return (txt or "").strip() or "(empty reply)", True
+                r = requests.post(NIM_URL,
+                                  headers={"Authorization": f"Bearer {NVIDIA_API_KEY}", "Content-Type": "application/json"},
+                                  json=payload, timeout=45)
+            except requests.exceptions.Timeout:
+                last = "timeout"
+                time.sleep(0.8 * (attempt + 1))
+                continue
             except Exception as e:  # noqa: BLE001
-                return f"[AI error] {e}", False
-        last = f"NIM {r.status_code}"
-        if r.status_code not in retry_status:
-            break
-        time.sleep(0.8 * (attempt + 1))
-    return f"[AI temporarily unavailable ({last}). You were NOT charged — please retry.]", False
+                last = f"error: {e}"
+                time.sleep(0.8 * (attempt + 1))
+                continue
+            if r.status_code == 200:
+                try:
+                    choice = r.json()["choices"][0]
+                    txt = ((choice.get("message") or {}).get("content") or "").strip()
+                except Exception as e:  # noqa: BLE001
+                    return f"[AI error] {e}", False
+                if txt:
+                    return txt, True
+                last = f"empty content (finish_reason={choice.get('finish_reason')}, max_tokens={budget})"
+                print(f"[chat] NIM returned no text: {last}", flush=True)
+                break  # try again with a bigger budget
+            last = f"NIM {r.status_code}"
+            if r.status_code not in retry_status:
+                break
+            time.sleep(0.8 * (attempt + 1))
+    return f"[AI returned no text ({last}). You were NOT charged - please retry.]", False
 
 
 SOL_RPC="https://api.mainnet-beta.solana.com"
@@ -507,7 +533,76 @@ class H(BaseHTTPRequestHandler):
             if isinstance(data, dict) and data.get("error"):
                 return self._j(data,502)
             return self._j({"ok":True,"source":"coingecko","markets":data})
+        if p.path=="/api/chat":
+            # A registered paid resource must not answer 404 to a crawler that probes GET.
+            return self._x402_challenge(head_only=False)
         return self._j({"error":"not found"},404)
+
+    # ── non-POST verbs on the paid route ──────────────────────────────────────────
+    # Directory crawlers probe GET/HEAD/PUT/DELETE/PATCH on a freshly registered resource.
+    # "402 Payment Required" is the correct answer on any verb; 404/405/501 reads as a broken
+    # endpoint. These handlers only ever emit the challenge - the paid POST path remains the
+    # only place where a payment is verified and settled.
+    def _x402_challenge(self, head_only=False):
+        instr = None
+        if X402_STD is not None:
+            try:
+                adapter = _X402HTTPAdapterAsPost(self)
+                import x402.http as _x402http
+                ctx = _x402http.HTTPRequestContext(adapter=adapter, path="/api/chat", method="POST",
+                                                   payment_header=self.headers.get("x-payment") or self.headers.get("payment-signature"))
+                res = X402_STD.process_http_request(ctx)
+                instr = getattr(res, "response", None) if res is not None else None
+            except Exception as e:
+                print("[chat] non-POST challenge error:", e, flush=True)
+        if instr is not None:
+            if not head_only:
+                return self._send_instructions(instr)
+            self.send_response(instr.status)
+            for k, v in (instr.headers or {}).items():
+                self.send_header(k, v)
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
+        # Gate off (or the SDK declined to build a challenge): still answer 402 with the same
+        # facts a buyer needs, so the resource never looks dead from the outside.
+        body = {"error": "payment_required", "resource": "https://xhagents.xyz/api/chat",
+                "paid_method": "POST", "price_usdc": MSG_PRICE_USDC, "network": "eip155:8453",
+                "asset": USDC_CONTRACTS["base"], "pay_to": TREASURY["base"],
+                "message": (f"x402 payment required: {MSG_PRICE_USDC} USDC on Base (eip155:8453) per call. "
+                            "POST this URL with a spec-compliant x402 v2 payment; the challenge also "
+                            "arrives in the PAYMENT-REQUIRED header.")}
+        if not head_only:
+            return self._j(body, 402)
+        self.send_response(402)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
+    def do_HEAD(self):
+        if urlparse(self.path).path=="/api/chat":
+            return self._x402_challenge(head_only=True)
+        self.send_response(404)
+        self.send_header("Content-Length","0")
+        self.end_headers()
+
+    def do_PUT(self):
+        if urlparse(self.path).path=="/api/chat":
+            return self._x402_challenge()
+        return self._j({"error":"not found"},404)
+
+    def do_DELETE(self):
+        if urlparse(self.path).path=="/api/chat":
+            return self._x402_challenge()
+        return self._j({"error":"not found"},404)
+
+    def do_PATCH(self):
+        if urlparse(self.path).path=="/api/chat":
+            return self._x402_challenge()
+        return self._j({"error":"not found"},404)
+
     def do_POST(self):
         p=urlparse(self.path)
         L=int(self.headers.get("Content-Length",0))
@@ -711,9 +806,14 @@ class H(BaseHTTPRequestHandler):
             # answered the first message of a conversation.
             _role_map={"agent":"assistant","assistant":"assistant","user":"user","system":"system"}
             history=[]
-            for _m in c.execute("SELECT role,content FROM msgs WHERE user_id=? ORDER BY ts",(uid,)).fetchall():
-                _r=_role_map.get(str(_m[0]),"assistant")
-                history.append({"role":_r,"content":_m[1]})
+            # Anonymous (agent-paid) callers must NOT share a conversation: every x402
+            # buyer that sends no user_id is pooled under uid "anon", so one buyer's
+            # question and our answer would be injected into the next buyer's prompt.
+            # No cross-buyer history: each anonymous paid call is answered on its own.
+            if uid != "anon":
+                for _m in c.execute("SELECT role,content FROM msgs WHERE user_id=? ORDER BY ts",(uid,)).fetchall():
+                    _r=_role_map.get(str(_m[0]),"assistant")
+                    history.append({"role":_r,"content":_m[1]})
             c.commit()
         finally:
             try: c.close()
@@ -729,18 +829,23 @@ Respond concisely (under 140 words), professional trading language, mix English/
 Give actionable insights: entry/exit, risk, liquidity, rug signals. Use 🟢BUY 🔴SELL 🟡HOLD sparingly. Cite CoinGecko prices when relevant.
 DISCLAIMER: not financial advice."""
         reply, ok = nim_reply(system_prompt, msg, history)
+        if not ok:
+            # No answer, no settlement: for a standard x402 call the payment is settled
+            # only further down, so a failed model call never takes the buyer's USDC.
+            print(f"[chat] AI failure for {uid} - nothing charged, nothing settled ({reply[:80]})", flush=True)
+            return self._j({"error":"answer_unavailable","reply":reply,"charged":False,"settled":False,
+                            "retryable":True,"price_per_msg":MSG_PRICE_USDC,
+                            "message":"The model returned no text, so no payment was taken or settled. Please retry."},
+                            503, None)
         c=db()
         try:
-            if ok and not x402_paid:
+            if not x402_paid and std_verified is None:
                 # charge exactly one credit, now that the user has a real answer
                 c.execute("UPDATE users SET balance=balance-1 WHERE user_id=? AND balance>=1",(uid,))
-                new_bal = max(0.0, float(bal) - 1)
             c.execute("INSERT INTO msgs VALUES(?,?,?,?,?)",(gen_id(),uid,"agent",reply,int(time.time())))
             c.commit()
         finally:
             c.close()
-        if not ok:
-            print(f"[chat] AI failure for {uid} — not charged ({reply[:60]})", flush=True)
         # Report the balance straight from the database: one source of truth, so a
         # failed call can never report a balance that was never charged.
         c=db()
@@ -750,14 +855,27 @@ DISCLAIMER: not financial advice."""
         finally:
             c.close()
         _extra = None
+        settled = False
         if std_verified is not None and X402_STD is not None:
             try:
                 _st = X402_STD.process_settlement(std_verified.payment_payload, std_verified.payment_requirements,
                                                  _ctx, declared_extensions=getattr(std_verified, "declared_extensions", None))
                 _extra = getattr(_st, "headers", None)
+                settled = True
             except Exception as _e:
                 print("[chat] x402 settle error:", _e, flush=True)
-        return self._j({"reply":reply,"balance":final_bal,"charged":bool(ok and not x402_paid and std_verified is None),
+                return self._j({"error":"settlement_failed","charged":False,"settled":False,
+                                "message":"The answer was produced but the payment could not be settled, so nothing was charged. Please retry."},
+                                502, None)
+        # `charged` has to mean "this call was paid for": USDC settled on-chain for an
+        # x402 call, or one wallet credit spent for the browser flow. It used to be
+        # False on a settled x402 call, which read like "money moved but nobody was
+        # billed" - the exact thing a paying buyer cannot reconcile.
+        charged_onchain = bool(settled or x402_paid)
+        spent_credit = not (x402_paid or std_verified is not None)
+        return self._j({"reply":reply,"balance":final_bal,
+                        "charged":bool(charged_onchain or spent_credit),
+                        "settled":charged_onchain,"charged_balance":spent_credit,
                         "price_per_msg":MSG_PRICE_USDC}, 200, _extra)
     def log_message(self,*a): pass
 
