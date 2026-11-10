@@ -1,60 +1,77 @@
-#3,333,333.33333ai 🤖
-> **Your Smart & Reliable AI Assistant for Trading**
+# XH Agents — AI Trading Assistant (pay-per-message)
 
-Automated AI Trading Agent for DEX — integrated with DexScreener, Jupiter Aggregator, and Phantom Wallet.
+A paid chat for token and market analysis, plus a market-data panel. Live at
+**https://xhagents.xyz/trading/**.
 
----
-
-## ⚡ Key Features
-
-- 📊 **Live DexScreener Feed** — real-time price, volume, and liquidity data without an API key
-- 👻 **Phantom Wallet Integration** — connect and read SOL balances directly from your browser
-- ⚡ **Jupiter Swap** — execute the best token swaps on Solana via Jupiter Aggregator v6
-- 🤖 **Auto-Trade Bot** — scans for automatic signals every 30 seconds with safety filters
-- 🧠 **AI Assistant** — pair & strategy analysis powered by Claude AI
-- 🛡️ **Safety Filters** — rug pull detection, minimum liquidity, volume filter, rate limiter
+Ask it about a token, a pair or a strategy and it answers from a hosted LLM with live market data in
+context. Each message costs **$0.10 USDC**. No token, no subscription, no sign-up.
 
 ---
 
-## 🚀 How to Use
+## What this actually does
 
-1. Open the Netlify project URL in a browser (Chrome / Brave)
-2. Make sure the **Phantom Wallet** extension is installed → [phantom.app](https://phantom.app)
-3. Click **CONNECT PHANTOM** → approve in the popup
-4. Type the token in the Search field → click **SCAN**
-5. Set the configuration (TP, SL, Strategy, Chain)
-6. Click **▶ START AUTO-TRADE** to start the bot automatically
+| | |
+|---|---|
+| Paid message | `POST /api/chat` — $0.10 USDC per message, two rails: wallet top-up credits, or a spec-compliant x402 payment on Base (`eip155:8453`) |
+| Wallet top-up | Connect MetaMask (USDC on Base) or Phantom (USDC on Solana), send USDC to the treasury, and the server credits messages by verifying the transfer on-chain — sender, recipient, token, amount and tx hash are all bound, and one transfer can be claimed once |
+| Market data | `GET /api/markets` — live price, 24h change, volume and a rule-based signal/confidence for 8 major pairs, from CoinGecko, refreshed server-side |
+| Chat | hosted LLM with the market snapshot injected into the prompt; a failed model call is never charged |
+| Health | `GET /api/chat/health` |
 
----
+Buyer flow: connect wallet → top up (or pay per call via x402) → chat. The chat panel and the credits
+flow live on the same page.
 
-## ⚙️ Optimal Configuration (Budget < $50)
+## What this repository does NOT contain — README correction, 2026-11-10
 
-| Setting | Value | Description |
-|---|---|---|
-| Take Profit | 3% | Realistic & consistent |
-| Stop Loss | 2% | Ratio 1:1.5 |
-| Trade Size | 10% per trade | Safe for micro budgets |
-| Main Chain | **Solana** | Fee ~$0.001 per tx |
-| Strategy | Volume Surge | Suitable for small capital |
-| Max Trade | 3x / hour | Prevent overtrading |
+An earlier version of this README advertised features that are **not in the code**. They are listed
+here so nobody has to discover the gap from the source:
 
----
+- **No DexScreener integration.** Market data comes from CoinGecko (`/api/markets`).
+- **No Jupiter swap, and no swap of any kind.** There is no swap instruction, no route request and no
+  transaction builder anywhere in this repository.
+- **No auto-trade bot.** No background scanner, no 30-second signal loop, no take-profit or stop-loss
+  execution.
+- **No rug-pull filter engine.** The activity log in the UI is a fixed, labelled sample (`DEMO …`) that
+  shows the intended layout. The `SIM` button next to a signal draws a sample row with a randomly
+  generated placeholder price; it sends nothing anywhere.
+- **No wallet custody.** The page can *ask a browser wallet to sign a USDC transfer* for a top-up, and
+  nothing else. No private key reaches this code.
 
-## 🔗 Technology
+The honest description of the product is one line: **a paid market-analysis chat with live market
+data.**
 
-- [DexScreener API](https://docs.dexscreener.com/api/reference) — live DEX data (free, no key needed)
-- [Jupiter Aggregator v6](https://jup.ag) — best route swap on Solana
-- [Phantom Wallet](https://phantom.app) — sign & broadcast Solana transactions
-- [Claude AI](https://anthropic.com) — signal analysis & AI assistant
-- [Netlify](https://netlify.com) — hosting & auto-deploy from GitHub
+## Running it locally
 
----
+```bash
+python3 chat_engine.py     # serves the API on :8001 and the page in this folder
+```
 
-## ⚠️ Disclaimer
+Environment (a local `.env` is read by a shared loader; real environment variables win):
 
-> This project is created for educational and experimental purposes. **Not financial advice.**
-> Crypto trading carries high risks. Use it wisely and only use funds you can afford to lose.
+| variable | used for |
+|---|---|
+| LLM key (e.g. `NVIDIA_API_KEY`) | chat model calls — without it the engine answers in demo mode |
+| `XH_LOOKBACK_BLOCKS` | how far back the on-chain payment scan looks |
+| `XH_CHAT_VERIFY_PER_HOUR` | rate limit per user+IP on payment verification |
+| `X402_STANDARD` | set to `0` to disable the standard x402 gate |
+| `X402_FACILITATOR_URL` | x402 facilitator (defaults to the CDP facilitator on Base mainnet) |
 
----
+Payment verification is delegated to a shared module (`xh_verify`), so the payable routes and the ad
+engine use the same, tested rules.
 
-*Made with 🤖 3,333,333,33333ai*
+## Files
+
+| file | what it is |
+|---|---|
+| `chat_engine.py` | the whole backend: chat, balance, top-up orders, wallet payment verification, x402 gate, market data |
+| `index.html` | the trading UI (market panel, chat, wallet connect, top-up) |
+| `deploy.sh` | deploy helper for the host in front of the engine |
+| `test_e2e.sh`, `test_chat_ai_failure.py` | end-to-end and failure-path checks |
+| `AUDIT_REPORT.md` | the audit that produced the fixes in this repository (kept for history) |
+| `LICENSE` | MIT |
+
+## Disclaimer
+
+Not financial advice. Market data is third-party data and can be delayed or wrong. This software does
+not execute trades and cannot execute trades as shipped. Crypto assets are risky — never spend what
+you cannot afford to lose.

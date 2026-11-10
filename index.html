@@ -465,7 +465,8 @@
             <div class="msg-body">
               Selamat datang di <strong style="color:var(--neon)">XH Agents</strong> AI Trading Assistant.<br>
               Chat berbasis USDC: <strong style="color:var(--neon2)">$0.1 per pesan</strong>. Top-up otomatis via Treasury.<br><br>
-              Tanyakan: analisis token, sinyal entry/exit, deteksi rug pull, atau strategi. Data sinyal di bawah adalah <strong>LIVE</strong> dari CoinGecko.
+              Tanyakan: analisis token, sinyal entry/exit, deteksi rug pull, atau strategi. Data sinyal di bawah adalah <strong>LIVE</strong> dari CoinGecko.<br><br>
+              ⚠️ <strong>Panel trading di bawah adalah SIMULASI:</strong> tombol SIM tidak mengirim order apa pun dan halaman ini tidak terhubung ke bursa mana pun. Yang LIVE hanya data pasar dari CoinGecko.
             </div>
           </div>
         </div>
@@ -501,10 +502,11 @@
     </div>
   </div>
 
-  <!-- LOG -->
+  <!-- LOG — the entries below are a fixed sample, not a live feed -->
+  <div style="font-size:0.62rem;color:var(--muted);margin:0.2rem 0 0.35rem">Activity log — SIMULATED SAMPLE (no live trading feed is connected to this panel)</div>
   <div class="log-panel" id="logPanel"></div>
 
-  <div class="footer">XH Agents • AI Trading Assistant • Pay-per-message $0.1 USDC • Live signals via CoinGecko — NOT FINANCIAL ADVICE</div>
+  <div class="footer">XH Agents • AI Trading Assistant • Pay-per-message $0.1 USDC • Market data live via CoinGecko • Trading panel is a SIMULATION (no orders are sent) — NOT FINANCIAL ADVICE</div>
 
   <!-- TOPUP MODAL — wallet connect + on-chain USDC pay -->
   <div class="catalog-modal" id="topupModal" onclick="if(event.target===this)closeTopup()" style="z-index:1200">
@@ -620,21 +622,23 @@ function renderSignals() {
         <span style="font-size:0.6rem;color:var(--muted)">${s.conf}%</span>
       </td>
       <td style="color:var(--muted);font-size:0.7rem">${s.reason}</td>
-      <td><button class="btn" style="padding:4px 10px;font-size:0.58rem" onclick="executeTrade('${s.pair}','${s.sig}')">EXEC</button></td>
+      <td><button class="btn" style="padding:4px 10px;font-size:0.58rem" title="Simulation only — no order is sent" onclick="simulateTrade('${s.pair}','${s.sig}')">SIM</button></td>
     </tr>`;
   }).join('');
 }
 renderSignals();
 
 // ===== LOG =====
+// Sample lines only: this panel illustrates the intended UI. No feed is connected, and no trade in
+// this list ever happened. Lines written by simulateTrade() are labelled the same way.
 const logs = [
-  {t:'08:42:11', cls:'log-info', msg:'Agent started. Scanning DexScreener feeds...'},
-  {t:'08:42:18', cls:'log-action', msg:'[BUY] SOL/USDT @ $147.90 | Size: $50.00 | SL: 3% TP: 6%'},
-  {t:'08:51:04', cls:'log-info', msg:'PEPE/WETH: Volume anomaly detected (+340% in 5min)'},
-  {t:'09:03:37', cls:'log-warn', msg:'WIF/USDC: Low liquidity warning — hold position'},
-  {t:'09:17:22', cls:'log-action', msg:'[SELL] ARB/USDT @ $1.06 | PnL: +$3.20 (+6.4%)'},
-  {t:'09:28:44', cls:'log-err', msg:'Rug alert: XTOKEN/WETH — blacklist updated, trade blocked'},
-  {t:'09:41:09', cls:'log-info', msg:'Refreshing DexScreener data... 12 pairs active'},
+  {t:'08:42:11', cls:'log-info', msg:'DEMO — sample line: no live feed is connected'},
+  {t:'08:42:18', cls:'log-action', msg:'DEMO [BUY] SOL/USDT @ $147.90 | Size: $50.00 | SL: 3% TP: 6%'},
+  {t:'08:51:04', cls:'log-info', msg:'DEMO PEPE/WETH: volume-anomaly rule illustration'},
+  {t:'09:03:37', cls:'log-warn', msg:'DEMO WIF/USDC: low-liquidity rule illustration'},
+  {t:'09:17:22', cls:'log-action', msg:'DEMO [SELL] ARB/USDT @ $1.06 | PnL: +$3.20 (+6.4%)'},
+  {t:'09:28:44', cls:'log-err', msg:'DEMO rug-alert rule illustration — no token is blacklisted'},
+  {t:'09:41:09', cls:'log-info', msg:'DEMO — sample line: nothing refreshes in the background'},
 ];
 
 function renderLogs() {
@@ -673,12 +677,14 @@ function toggleAgent() {
   }
 }
 
-// ===== EXECUTE TRADE =====
-function executeTrade(pair, sig) {
+// ===== SIMULATED EXECUTION (UI demo — no swap, no order, no chain call) =====
+// This page has no swap integration and no trading bot. The button only draws a sample row so the
+// layout can be reviewed; the price it prints is a randomly generated placeholder, not a quote.
+function simulateTrade(pair, sig) {
   const size = document.getElementById('tradeSize').value;
   const price = (Math.random()*1000+1).toFixed(4);
-  addLog('log-action', `[${sig}] ${pair} @ $${price} | Size: $${size} | Manual exec`);
-  appendMsg('agent', `✅ Trade executed: <strong>[${sig}] ${pair}</strong> — Size $${size} USDT. Stop Loss & Take Profit set. Monitoring position...`);
+  addLog('log-warn', `SIMULATED ${sig} ${pair} @ $${price} | Size: $${size} | nothing sent`);
+  appendMsg('agent', `🧪 <strong>Simulation only</strong> — no order was created and nothing was sent to any chain; this page cannot execute a trade. Illustrative only: ${sig} ${pair} @ $${price}, $${size} notional.`);
 }
 
 // ===== WALLET + PAYMENT (multi-modal: Ataraxia style, header) =====
